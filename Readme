@@ -1,7 +1,7 @@
 1. Introduction
-Integration of Multiple Formal Matrix in Coq
+Integration of Multiple Formal Matrix in Coq.
 
-2. Build
-$ make
-$ make clean
+2. Branch for SETTA-2022
+git clone url:
+$ git clone https://github.com/zhengpushi/coq-matrix.git -b setta2022
 

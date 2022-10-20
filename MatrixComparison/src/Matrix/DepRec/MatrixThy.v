@@ -410,7 +410,7 @@ Module MatrixThy (F : FieldSig) <: MatrixThySig F.
  *)  
   
   
-  (** X useful tactic for solving X = B for concrete X, B *)
+  (** useful tactic for solving X = B for concrete X, B *)
  
   (* 列表相等，转换为元素相等 *)
   Ltac list_eq :=

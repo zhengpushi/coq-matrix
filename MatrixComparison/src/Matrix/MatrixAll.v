@@ -11,6 +11,7 @@ Require
   DepList.MatrixThy
   DepRec.MatrixThy 
   NatFun.MatrixThy
+  FinFun.MatrixThy
   .
 
   
@@ -31,12 +32,15 @@ Module MatrixAll (F : FieldSig).
   
   Import NatFun.MatrixThy.
   Module NF := MatrixThy F.
+  
+  Import FinFun.MatrixThy.
+  Module FF := MatrixThy F.
 
 
   (* ======================================================================= *)
   (** ** Conversion between different implementations *)
   
-  (** DR -- FUN *)
+  (** DR -- NF *)
   Definition dr2nf {r c} (m : DR.M r c) : NF.M r c := NF.l2m (DR.m2l m).
   Definition nf2dr {r c} (m : NF.M r c) : DR.M r c := DR.l2m (NF.m2l m).
   
@@ -90,6 +94,63 @@ Module MatrixAll (F : FieldSig).
     - subst; auto.
     - subst; auto. rewrite H2; auto.
   Qed.
+  
+  (** DR -- FF *)
+  Definition dr2ff {r c} (m : DR.M r c) : FF.M r c := FF.l2m (DR.m2l m).
+  Definition ff2dr {r c} (m : FF.M r c) : DR.M r c := DR.l2m (FF.m2l m).
+  
+  Lemma dr2ff_bij {r c} : bijective (@dr2ff r c).
+  Proof.
+    unfold dr2ff. unfold bijective,injective,surjective. split; intros.
+    - apply FF.l2m_inj; auto with mat. apply DR.m2l_inj; auto.
+    - exists (DR.l2m (FF.m2l b)).
+      rewrite DR.m2l_l2m_id; auto with mat. apply FF.l2m_m2l_id.
+  Qed.
+  
+  Corollary dr2ff_surj {r c} : surjective (@dr2ff r c).
+  Proof. destruct (@dr2ff_bij r c); auto. Qed.
+  
+  Lemma ff2dr_bij {r c} : bijective (@ff2dr r c).
+  Proof.
+    unfold ff2dr. unfold bijective,injective,surjective. split; intros.
+    - apply DR.l2m_inj; auto with mat. apply FF.m2l_inj; auto.
+    - exists (FF.l2m (DR.m2l b)).
+      rewrite FF.m2l_l2m_id; auto with mat. apply DR.l2m_m2l_id.
+  Qed.
+  
+  Corollary ff2dr_surj {r c} : surjective (@ff2dr r c).
+  Proof. destruct (@ff2dr_bij r c); auto. Qed.
+  
+  Lemma dr2ff_ff2dr_id : forall r c (m : FF.M r c), 
+    dr2ff (ff2dr m) = m.
+  Proof.
+    intros. unfold dr2ff,ff2dr. rewrite DR.m2l_l2m_id.
+    apply FF.l2m_m2l_id; auto. apply FF.m2l_length. apply FF.m2l_width.
+  Qed.
+  
+  Lemma ff2dr_dr2ff_id : forall r c (m : DR.M r c), 
+    ff2dr (dr2ff m) = m.
+  Proof.
+    intros. unfold dr2ff,ff2dr. rewrite FF.m2l_l2m_id.
+    apply DR.l2m_m2l_id. apply DR.m2l_length. apply DR.m2l_width.
+  Qed.
+  
+  Lemma hom_madd_dr2ff : forall r c, 
+    homomorphic DR.madd FF.madd (@dr2ff r c).
+  Proof.
+    intros r c m1 m2. destruct m1 as [d1 H1 W1], m2 as [d2 H2 W2].
+    unfold dr2ff. simpl.
+    unfold matmap2dl. simpl.
+(* (*     apply FF.meq_iff. intros i j Hi Hj. simpl. *)
+    unfold dmap2. rewrite map2_nth.
+    - rewrite map2_nth; auto.
+      rewrite (width_imply_nth_length _ i c); auto. rewrite H1; auto.
+      rewrite (width_imply_nth_length _ i c); auto. rewrite H2; auto.
+    - subst; auto.
+    - subst; auto. rewrite H2; auto.
+  Qed.
+ *)  
+  Admitted.
   
 
   (** DR -- DP *)
@@ -204,7 +265,47 @@ Module MatrixAll (F : FieldSig).
     apply DR.l2m_m2l_id. apply DR.m2l_length. apply DR.m2l_width.
   Qed.
   
-  (** FUN -- DP *)
+  (** NF -- FF *)
+  Definition nf2ff {r c} (m : NF.M r c) : FF.M r c := FF.l2m (NF.m2l m).
+  Definition ff2nf {r c} (m : FF.M r c) : NF.M r c := NF.l2m (FF.m2l m).
+
+  Lemma nf2ff_bij {r c} : bijective (@nf2ff r c).
+  Proof.
+    unfold nf2ff. unfold bijective,injective,surjective. split; intros.
+    - apply FF.l2m_inj; auto with mat. apply NF.m2l_inj; auto.
+    - exists (NF.l2m (FF.m2l b)).
+      rewrite NF.m2l_l2m_id; auto with mat. apply FF.l2m_m2l_id.
+  Qed.
+  
+  Corollary nf2ff_surj {r c} : surjective (@nf2ff r c).
+  Proof. destruct (@nf2ff_bij r c); auto. Qed.
+  
+  Lemma ff2nf_bij {r c} : bijective (@ff2nf r c).
+  Proof.
+    unfold ff2nf. unfold bijective,injective,surjective. split; intros.
+    - apply NF.l2m_inj; auto with mat. apply FF.m2l_inj; auto.
+    - exists (FF.l2m (NF.m2l b)).
+      rewrite FF.m2l_l2m_id; auto with mat. apply NF.l2m_m2l_id.
+  Qed.
+  
+  Corollary ff2nf_surj {r c} : surjective (@ff2nf r c).
+  Proof. destruct (@ff2nf_bij r c); auto. Qed.
+  
+  Lemma nf2ff_dp2nf_id : forall r c (m : FF.M r c), 
+    nf2ff (ff2nf m) = m.
+  Proof.
+    intros. unfold nf2ff,ff2nf. rewrite NF.m2l_l2m_id.
+    apply FF.l2m_m2l_id. apply FF.m2l_length. apply FF.m2l_width.
+  Qed.
+  
+  Lemma ff2nf_nf2ff_id : forall r c (m : NF.M r c), 
+    ff2nf (nf2ff m) = m.
+  Proof.
+    intros. unfold ff2nf,nf2ff. rewrite FF.m2l_l2m_id.
+    apply NF.l2m_m2l_id; auto. apply NF.m2l_length. apply NF.m2l_width.
+  Qed.
+  
+  (** NF -- DP *)
   Definition nf2dp {r c} (m : NF.M r c) : DP.M r c := DP.l2m (NF.m2l m).
   Definition dp2nf {r c} (m : DP.M r c) : NF.M r c := NF.l2m (DP.m2l m).
 
@@ -244,7 +345,7 @@ Module MatrixAll (F : FieldSig).
     apply NF.l2m_m2l_id; auto. apply NF.m2l_length. apply NF.m2l_width.
   Qed.
 
-  (** FUN -- DL *)
+  (** NF -- DL *)
   Definition nf2dl {r c} (m : NF.M r c) : DL.M r c := DL.l2m (NF.m2l m).
   Definition dl2nf {r c} (m : DL.M r c) : NF.M r c := NF.l2m (DL.m2l m).
   
@@ -282,6 +383,86 @@ Module MatrixAll (F : FieldSig).
   Proof.
     intros. unfold nf2dl,dl2nf. rewrite DL.m2l_l2m_id.
     apply NF.l2m_m2l_id; auto. apply NF.m2l_length. apply NF.m2l_width.
+  Qed.
+  
+  (** FF -- DP *)
+  Definition ff2dp {r c} (m : FF.M r c) : DP.M r c := DP.l2m (FF.m2l m).
+  Definition dp2ff {r c} (m : DP.M r c) : FF.M r c := FF.l2m (DP.m2l m).
+
+  Lemma ff2dp_bij {r c} : bijective (@ff2dp r c).
+  Proof.
+    unfold ff2dp. unfold bijective,injective,surjective. split; intros.
+    - apply DP.l2m_inj; auto with mat. apply FF.m2l_inj; auto.
+    - exists (FF.l2m (DP.m2l b)).
+      rewrite FF.m2l_l2m_id; auto with mat. apply DP.l2m_m2l_id.
+  Qed.
+  
+  Corollary ff2dp_surj {r c} : surjective (@ff2dp r c).
+  Proof. destruct (@ff2dp_bij r c); auto. Qed.
+  
+  Lemma dp2ff_bij {r c} : bijective (@dp2ff r c).
+  Proof.
+    unfold dp2ff. unfold bijective,injective,surjective. split; intros.
+    - apply FF.l2m_inj; auto with mat. apply DP.m2l_inj; auto.
+    - exists (DP.l2m (FF.m2l b)).
+      rewrite DP.m2l_l2m_id; auto with mat. apply FF.l2m_m2l_id.
+  Qed.
+  
+  Corollary dp2ff_surj {r c} : surjective (@dp2ff r c).
+  Proof. destruct (@dp2ff_bij r c); auto. Qed.
+  
+  Lemma ff2dp_dp2ff_id : forall r c (m : DP.M r c), 
+    ff2dp (dp2ff m) = m.
+  Proof.
+    intros. unfold ff2dp,dp2ff. rewrite FF.m2l_l2m_id.
+    apply DP.l2m_m2l_id. apply DP.m2l_length. apply DP.m2l_width.
+  Qed.
+  
+  Lemma dp2ff_ff2dp_id : forall r c (m : FF.M r c), 
+    dp2ff (ff2dp m) = m.
+  Proof.
+    intros. unfold dp2ff,ff2dp. rewrite DP.m2l_l2m_id.
+    apply FF.l2m_m2l_id; auto. apply FF.m2l_length. apply FF.m2l_width.
+  Qed.
+  
+  (** FF -- DL *)
+  Definition ff2dl {r c} (m : FF.M r c) : DL.M r c := DL.l2m (FF.m2l m).
+  Definition dl2ff {r c} (m : DL.M r c) : FF.M r c := FF.l2m (DL.m2l m).
+
+  Lemma ff2dl_bij {r c} : bijective (@ff2dl r c).
+  Proof.
+    unfold ff2dl. unfold bijective,injective,surjective. split; intros.
+    - apply DL.l2m_inj; auto with mat. apply FF.m2l_inj; auto.
+    - exists (FF.l2m (DL.m2l b)).
+      rewrite FF.m2l_l2m_id; auto with mat. apply DL.l2m_m2l_id.
+  Qed.
+  
+  Corollary ff2dl_surj {r c} : surjective (@ff2dl r c).
+  Proof. destruct (@ff2dl_bij r c); auto. Qed.
+  
+  Lemma dl2ff_bij {r c} : bijective (@dl2ff r c).
+  Proof.
+    unfold dl2ff. unfold bijective,injective,surjective. split; intros.
+    - apply FF.l2m_inj; auto with mat. apply DL.m2l_inj; auto.
+    - exists (DL.l2m (FF.m2l b)).
+      rewrite DL.m2l_l2m_id; auto with mat. apply FF.l2m_m2l_id.
+  Qed.
+  
+  Corollary dl2ff_surj {r c} : surjective (@dl2ff r c).
+  Proof. destruct (@dl2ff_bij r c); auto. Qed.
+  
+  Lemma ff2dl_dl2ff_id : forall r c (m : DL.M r c), 
+    ff2dl (dl2ff m) = m.
+  Proof.
+    intros. unfold ff2dl,dl2ff. rewrite FF.m2l_l2m_id.
+    apply DL.l2m_m2l_id. apply DL.m2l_length. apply DL.m2l_width.
+  Qed.
+  
+  Lemma dl2ff_ff2dl_id : forall r c (m : FF.M r c), 
+    dl2ff (ff2dl m) = m.
+  Proof.
+    intros. unfold dl2ff,ff2dl. rewrite DL.m2l_l2m_id.
+    apply FF.l2m_m2l_id; auto. apply FF.m2l_length. apply FF.m2l_width.
   Qed.
   
   (** DP -- DL *)
@@ -337,6 +518,7 @@ Module MatrixQc_DR := MatrixAllQc.DR.
 Module MatrixQc_DP := MatrixAllQc.DP.
 Module MatrixQc_DL := MatrixAllQc.DL.
 Module MatrixQc_NF := MatrixAllQc.NF.
+Module MatrixQc_FF := MatrixAllQc.FF.
 
 (** Matrix based on R *)
 Module MatrixAllR := MatrixAll FieldR.FieldDefR.
@@ -345,6 +527,7 @@ Module MatrixR_DR := MatrixAllR.DR.
 Module MatrixR_DP := MatrixAllR.DP.
 Module MatrixR_DL := MatrixAllR.DL.
 Module MatrixR_NF := MatrixAllR.NF.
+Module MatrixR_FF := MatrixAllR.FF.
 
 
 (* ######################################################################### *)
@@ -370,7 +553,7 @@ Module Usage_DR.
 
 End Usage_DR.
 
-(** test FUN *)
+(** test NF *)
 Module Usage_NF.
   
   Import QcExt List ListNotations.
@@ -396,6 +579,33 @@ Module Usage_NF.
   Proof. intros. apply madd_comm. Qed.
 
 End Usage_NF.
+
+(** test FF *)
+Module Usage_FF.
+  
+  Import QcExt List ListNotations.
+  Import MatrixQc_FF.
+  
+  Open Scope Q. (* 要能解析 0.1 之类的输入，必须先打开该作用域 *)
+  Open Scope Qc.
+  Open Scope mat_scope.
+  
+  Example m1 := mat1 5.
+(*   Compute m2l m1.
+  Compute m2l (m1 * m1)%M. *)
+  
+  Coercion Q2Qc : Q >-> Qc.
+  
+  (** (i,j) <- i * 1.0 + j * 0.1 *)
+(*   Example m2 : M 5 5 := @mk_mat Qc _ _ 
+    (fun i j => (nat2Q i) + (nat2Q j) * 0.1)%Qc. *)
+(*   Compute m2l m2.
+  Compute m2l (m2 * m2)%M. (* todo: Check that why so many 0 *) *)
+  
+  Example ex1 : forall r c (m1 m2 : M r c), madd m1 m2 = madd m2 m1.
+  Proof. intros. apply madd_comm. Qed.
+
+End Usage_FF.
 
 (** test DL *)
 Module Usage_DL.
@@ -460,5 +670,8 @@ Module Usage_Mixed.
 (*   Compute dl2dr m4.
   Compute dl2nf m4.
   Compute dl2dp m4. *)
+  
+  Definition m5 : FF.M 3 3 := dl2ff m4.
+  (* The evaluation on FF is crashed! *)
   
 End Usage_Mixed.

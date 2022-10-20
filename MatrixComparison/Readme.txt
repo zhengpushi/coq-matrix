@@ -21,9 +21,16 @@ Use this unified signature, your code will be more robust and portable.
 
 
 2. Building instructions
+For build,
 $ make
+or
+$ make -j8
+
+For clean,
 $ make clean
+or
 $ make cleanall
+
 
 3. Known issues
 (1) Coq-8.13 and Coq-8.16 has a minor difference when naming parameters.

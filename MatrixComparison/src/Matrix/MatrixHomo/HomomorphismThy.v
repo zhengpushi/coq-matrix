@@ -7,7 +7,7 @@
   1. it is implemented with equivalence equality, not Leibniz equality.
   
   History   :
-    2022.07.12  by ZhengPu Shi, remove equivalence relation, only use eq
+    2022.07.12  by Zhengpu SHI, remove equivalence relation, only use eq
 *)
 
 Require Export BasicConfig.

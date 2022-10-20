@@ -13,710 +13,658 @@
 
 
 
-Require Export ListListExt.
-Require Export FieldTypeR.
-Require Import MatrixSig.
+(** The library all_algebra contain 'matrix' formalization *)
+From mathcomp Require Import all_ssreflect all_algebra.
 
-Require Export Fin.
+Require Export MatrixThySig.
+(* Require Export ListListExt.
+Require Export FieldTypeR.
+Require Import MatrixSig. *)
+
+(* Require Export Fin.
 Require Export Arith.
 Require Export Lia.
 Require Export List.
-Export ListNotations.
+Export ListNotations. *)
 
 
-Module MatrixImpl (E : RingType) <: MatrixSig.
-  Export E.
-  
-  (* 作用域 *)
-  Open Scope nat_scope.
-  Open Scope A_scope.
-  
-  Declare Scope mat_scope.
-  Delimit Scope mat_scope with M.
+(* ######################################################################### *)
+(** * Matrix theory *)
+Module MatrixThy (F : FieldSig) <: MatrixThySig F.
+
+  Module Export FieldThyInst := FieldThy F.
+
+  Open Scope X_scope.
   Open Scope mat_scope.
 
-  (** 基础类型 *)
-  Definition A := E.A.
-  Definition A1 := E.A1.
-  Definition Aadd := E.Aadd.
-  Definition Amul := E.Amul.
-
-
-  (** 矩阵类型 *)
-  
-  (** We define a _matrix_ as a simple function from two fin
-      (corresponding to a row and a column index) to a value. *)
-  Definition mat (r c : nat) := Fin.t r -> Fin.t c -> E.A.
-  
-  Bind Scope mat_scope with mat.
-
-  Notation Vector n := (mat n 1).
-  Notation Square n := (mat n n).
-  
-  Module test_cvt_nat_fin.
-(*     (* nat + Prop 转换为 Fin.t *)
-    Print Fin.t.
-    Search Fin.t.
-    Check of_nat_lt.
-    Example ex1 : 2 < 3.
-    unfold lt. constructor. Defined. Print ex1.
-    (* 生成一个 Fin.t 3 的元素。总共有 0,1,2 这三个序号的元素，这里指定的序号是 2 *)
-    Compute @of_nat_lt 2 3 (le_n 3).
+  (** package X to ringType structure, to enable X be used as carrier type 
+    of MathComp.matrix. 
+    We must construct the required hierarchy one by one, otherwise, the later 
+    structure will fail.
+    For example, choiceType need a eqType canonical declaration, and so on *)
+  Module Export X_carrier_of_matrix.
     
-    (* Fin.t 转换为 nat + Prop *)
-    Check @F1 3.
-    Compute to_nat (@F1 3).
-    Compute proj1_sig (to_nat (@F1 3)). *)
-  End test_cvt_nat_fin.
-  
-  Check of_nat 3 2.
-  
-  Definition mnth {r c} (m : mat r c) (ri ci : nat) : E.A.
-  Proof.
-    destruct (lt_dec ri r), (lt_dec ci c).
-    - exact (m (of_nat_lt l) (of_nat_lt l0)).
-    - exact A0.
-    - exact A0.
-    - exact A0.
-  Defined.
-  
-  (** 矩阵相等 *)
-  Definition meq {r c} (m1 m2 : mat r c) : Prop := 
-    forall ri ci, ri < r -> ci < c -> mnth m1 ri ci = mnth m2 ri ci.
-
-  (* 矩阵相等 *)
-  
-  (** Note that the dimensions of the matrix aren'A being used here. In
-      practice, a matrix is simply a function on any two nats. However,
-      we will used these dimensions to define equality, as well as the
-      multiplication and kronecker product operations to follow. *)
-
-  (* If every element of corresponding elements of two matrices, then we called 
-   they are mat_equiv. *)
-  Definition meq {m n : nat} (A B : mat m n) : Prop := 
-    forall i j, A i j = B i j.
-  
-  Declare Scope mat_scope.
-  Delimit Scope mat_scope with M.
-  Open Scope M.
-  Global Notation "m1 == m2" := (meq m1 m2) (at level 70) : mat_scope.
-  
-  Lemma meq_equiv : forall {r c}, equivalence (mat r c) meq.
-  Proof.
-    intros. refine (Build_equivalence _ _ _ _ _); unfold meq.
-    - intros m. intros. auto.
-    - intros m1 m2 m3. intros. rewrite H; auto.
-    - intros m1 m2. intros. rewrite H; auto.
-  Qed.
-
-  (* 需要手动注册给 Coq *)
-  Add Parametric Relation (r c : nat) : (mat r c) meq
-    reflexivity proved by (equiv_refl (mat r c) meq meq_equiv)
-    symmetry proved by (equiv_sym (mat r c) meq meq_equiv)
-    transitivity proved by (equiv_trans (mat r c) meq meq_equiv)
-    as meq_rel.
+    (* eqType *)
+    Section eqType.
+      (** reflect (x1 = x2) (x1 =? x2) *)
+      Let X_eqbP : Equality.axiom Xeqb.
+      Proof.
+        hnf. intros. destruct (Xeqdec x y) as [H|H]; auto.
+        - apply Xeqb_true_iff in H. rewrite H. constructor.
+          apply Xeqb_true_iff. auto.
+        - apply Xeqb_false_iff in H. rewrite H. constructor.
+          apply Xeqb_false_iff. auto.
+      Qed.
     
-  (** Convert between Lists and Vectors / Matrices *)
-  
-  (* 一些辅助定义和引理 *)
-  Section aux.
+      Let X_eqMixin := EqMixin X_eqbP.
+      Canonical X_eqType := Eval hnf in EqType X X_eqMixin.
+    End eqType.
     
-    (* Fetch a row *)
-
-    (* Aux function, cnt initial is 0 *)
-    (* 取出第 ri 行的数据。
-      1. 列元素个数为 c 个
-      2. 列偏移量为 c_init，如果为0则正好，不为0，则超出部分的数据不保证正确
-    *)
-    ?
-    Fixpoint mrow_aux {r c : nat} (ri : Fin.A r) (c_init : Fin.A c) (m : mat r c) 
-      : list A := match c with
-      | O => nil
-      | S c' => m ri c_init :: (@mrow_aux r c' ri (FS c_init) m)
-      end.
-    
-    Lemma eq4 : forall r c (m : mat r c) ri c_init,
-      ri < r -> S c_init < c ->
-      m ri c_init :: mrow_aux ri (S c_init) m = mrow_aux ri c_init m.
-    Proof.
-      intros r c. gd r. induction c; intros. lia.
-      simpl. rewrite IHc; auto. auto.
-      (* 同样的问题 *)
-    Admitted.
-    
-    (* 列表多取出一个元素，不影响有效数据 *)
-    Lemma eq1 : forall r c (m : mat r (S c)) ri ci c_init,
-      ci + c_init < S c ->
-      @nth A ci (@mrow_aux r (S c) ri c_init m) A0 =
-      @nth A ci (@mrow_aux r c ri c_init m) A0.
-    Proof.
-      intros. simpl. unfold mrow_aux. destruct ci.
-    Admitted.
-    
-    Lemma eq2 : forall r c (m : mat r c) ri ci c_init,
-      ri < r -> ci + (S c_init) < c ->
-      nth (S ci) (@mrow_aux r c ri c_init m) A0 = 
-      nth ci (@mrow_aux r c ri (S c_init) m) A0.
-    Proof.
-      intros r c. gd r. induction c; intros. lia.
-      rewrite eq1; try lia. rewrite eq1; auto. rewrite IHc; auto.
-      (* 仍然无法证明 *)
-    Admitted.
-
-    (* 不越界时取出有效的数据 *)
-    Lemma nth_mrow_aux : forall {r c} (m : mat r c) ri ci c_init,
-      (ri < r) -> (ci + c_init < c) ->
-      nth ci (mrow_aux ri c_init m) A0 = m ri (Nat.add ci c_init).
-    Proof.
-      (* 第一次证明，最后的不等式无法证明 *)
-      intros r c. gd r. induction c; intros. lia. simpl.
-      destruct ci; auto. simpl. rewrite IHc; auto. Restart.
-      (* 第二次证明，先归纳 ci *)
-      intros r c m ri ci. gd ri. gd m. gd c. gd r. induction ci; intros.
-      - induction c. lia. auto.
-      - replace (S ci + c_init)%nat with (ci + (S c_init))%nat; try lia.
-        rewrite <- IHci with (r:=r) (c:=c); try lia.
-        (* 转换到另一个问题，但也不能证明 *)
-        apply eq2; auto. lia.
-        Back 2.
-        (* 尝试变换形式 *)
-        replace (mrow_aux ri c_init m)
-        with (m ri c_init :: mrow_aux ri (S c_init) m). simpl. ; auto.
-        (* 转换到新问题 *)
-        apply eq4; auto. lia.
-    Qed.
-    
+    (* choiceType *)
+    Section choiceType.
+      Import Countable.
       
-    Definition mrow {r c : nat} (ri : nat) (m : mat r c) := 
-      @mrow_aux r c ri 0 m.
-    
-    Lemma mrow_aux_length : forall {r c} ri c_init (m : mat r c), 
-      length (mrow_aux ri c_init m) = c.
-    Proof.
-      intros r c. induction c; intros; simpl; auto.
-    Qed.
-      
-    Lemma mrow_length : forall {r c} ri (m : mat r c), length (mrow ri m) = c.
-    Proof.
-      intros. apply mrow_aux_length.
-    Qed.
-    
-    (* mat to list list *)
-    Fixpoint m2l_aux {r c : nat} (cnt : nat) (m : mat r c) : list (list A) := 
-      match r with
-      | O => nil
-      | S r' => mrow cnt m :: (@m2l_aux r' c (S cnt) m)
-      end.
-    
-    Lemma m2l_aux_length : forall {r c} cnt (m : mat r c), 
-      length (m2l_aux cnt m) = r.
-    Proof.
-      induction r; intros; simpl; auto.
-    Qed.
-    
-    Lemma m2l_aux_width : forall {r c} cnt {m : mat r c}, 
-      width (m2l_aux cnt m) c.
-    Proof.
-      induction r; intros; simpl; auto. split.
-      - apply mrow_length.
-      - (* a bit tricky. although it seems too hard, but notice that
-        "mat r c" and "mat (S r) c" and "mat 4 3" are same type. *)
-        destruct r; auto.
-    Qed.
-    
-    (* m2l_aux and nth *)
-    Lemma m2l_aux_nth_nth : forall {r c} (dl : list (list E.A))
-      (H1 : length dl = r) (H2 : width dl c),
-      @m2l_aux r c 0 (fun x y : nat => nth y (nth x dl []) 0) = dl.
-    Proof.
-      intros. gd dl. gd c.
-      induction r; intros.
-      - apply length_zero_iff_nil in H1. subst. simpl. auto.
-      - simpl. destruct dl.
-        + simpl in H1. lia.
-        + f_equal.
-          {  
-      
-    Admitted.
-      
-    
-    Lemma nth_mrow : forall {r c} (m : mat r c) ri ci,
-      (ri < r) -> (ci < c) ->
-      nth ci (mrow ri m) A0 = m ri ci.
-    Proof.
-      intros. unfold mrow.
-      induction r; intros; simpl. lia.
-      destruct ri; simpl.
-      2:{ 
-(*        rewrite IHr.
-      intros r c. gd r. induction c; intros. lia.
-      destruct ci; simpl; auto.
- *)       
+      Definition X_choiceType_mixin_of : mixin_of X.
       Admitted.
+      
+      Let X_choiceMixin := ChoiceMixin X_choiceType_mixin_of.
+      Canonical X_choiceType := ChoiceType X X_choiceMixin.
+    End choiceType.
     
-    Lemma nth_nth_m2l_aux : forall {r c} (m : mat r c) (ri ci r_init : nat),
-      (ri < r) -> (ci < c) -> (ri + r_init < r) ->
-      nth ci (nth ri (m2l_aux r_init m) []) A0 = m (Nat.add ri r_init) ci.
-    Proof.
-      induction r; intros. lia.
-      destruct ri; simpl. apply nth_mrow; auto.
-      rewrite IHr; auto. lia.
+    (* zmodType *)
+    Section zmodType.
+      Import ssrfun.
       
-(*        ?
-      induction ri; simpl. apply nth_mrow; auto.
-      rewrite IHr; auto. lia.
+      Let Xadd_assoc : associative Xadd. Proof. hnf;intros;ring. Qed.
+      Let Xadd_comm : commutative Xadd. Proof. hnf;intros;ring. Qed.
+      Let Xadd_left_id : left_id X0 Xadd. Proof. hnf;intros;ring. Qed.
+      Let Xadd_left_inv : left_inverse X0 Xopp Xadd. Proof. hnf;intros;ring. Qed.
       
-       IHri.
-      simpl.
-      intros. unfold m2l_aux.
-      induction r; intros. lia. simpl.
-      destruct ri; simpl.
-      2:{ unfold m2l_aux.
-      - (* apply nth_mrow; auto. *)
- *)      Admitted.
+      Let X_zmodMixin := ZmodMixin Xadd_assoc Xadd_comm Xadd_left_id 
+        Xadd_left_inv.
+      Canonical X_zmodType := Eval hnf in ZmodType _ X_zmodMixin.
+    End zmodType.
+    
+    (* ringType *)
+    Section ringType.
+      Import ssrfun.
       
-  End aux.
+      Let Xmul_assoc : associative Xmul. Proof. hnf;intros;ring. Qed.
+      Let Xmul_left_id : left_id X1 Xmul. Proof. hnf;intros;ring. Qed.
+      Let Xmul_right_id : right_id X1 Xmul. Proof. hnf;intros;ring. Qed.
+      Let Xmul_left_distr : left_distributive Xmul Xadd.
+      Proof. hnf;intros;ring. Qed.
+      Let Xmul_right_distr : right_distributive Xmul Xadd.
+      Proof. hnf;intros;ring. Qed.
+      
+      (* 1 != 0%R *)
+      Let X_1_neq_0 : negb (eq_op X1 (GRing.zero X_zmodType)).
+      Proof. cbv. assert (H:Xeqb X1 X0 = false); [|rewrite H; auto].
+        apply Xeqb_false_iff. apply X1_neq_X0.
+      Qed.
+      
+      Let X_ringMixin := RingMixin Xmul_assoc Xmul_left_id Xmul_right_id
+        Xmul_left_distr Xmul_right_distr X_1_neq_0.
+      Canonical X_ringType := Eval hnf in RingType _ X_ringMixin.
+      
+    End ringType.
+    
+  End X_carrier_of_matrix.
   
-  (** MatrixSig 中关于“list list和Matrix互转” 的要求 *)
   
-  (* 这个定义也有额外的好处，但签名有点奇怪，是否能够通用？先保留 *)
-  Definition l2M (l : @list (list A)) : mat (length l) (length (hd [] l)) :=
-    (fun x y => nth y (nth x l []) A0).
-  
-  Definition mlength {r c} (m : mat r c) := r.
-  Definition mwidth {r c} (m : mat r c) := c.
-  
-  Definition l2m {r c} (dl : list (list E.A)) : mat r c := 
-    fun x y => nth y (nth x dl []) A0.
-  
-  Lemma l2m_length : forall {r c} (dl : list (list A)),
-    mlength (@l2m r c dl) = r.
-  Proof.
-    intros. unfold mlength. auto.
-  Qed.
-  
-  Lemma l2m_width : forall {r c} (dl : list (list A)),
-    mwidth (@l2m r c dl) = c.
-  Proof.
-    intros. unfold mwidth. auto.
-  Qed.
-  
-  Definition m2l {r c} (m : mat r c) := m2l_aux 0 m.
 
-  Lemma m2l_length : forall {r c} (m : mat r c), length (m2l m) = r.
-  Proof.
-    unfold m2l. intros; apply m2l_aux_length.
-  Qed.
+  (** Matrix type *)
   
-  Lemma m2l_width : forall {r c} (m : mat r c), width (m2l m) c.
-  Proof.
-    intros. apply m2l_aux_width.
-  Qed.
-  
-  Lemma m2l_l2m_id : forall {r c} (dl : list (list E.A)),
-    (length dl = r) -> (width dl c) -> m2l (@l2m r c dl) = dl.
-  Proof.
-    unfold m2l,l2m.
-    destruct r.
-    - intros. apply length_zero_iff_nil in H. subst. simpl. auto.
-    - intros. rewrite m2l_aux_nth_nth; auto.
-  Qed.
-  
-  Lemma l2m_m2l_id : forall {r c} (m : mat r c), 
-    (mlength m = r) -> (mwidth m = c) -> meq (l2m (m2l m)) m. 
-  Proof.
-    intros. unfold m2l,l2m. unfold meq; intros.
-    rewrite nth_nth_m2l_aux; auto. lia.
-  Qed.
-  
-  (* Lists to Vectors *)
-  
-  Definition l2V (l : list A) : Vector (length l) :=
-    (fun x y => nth x l A0).
-
-  (** (mrow_aux m i c_init)[j] = m[i][j + c_init] *)
-  Lemma mrow_aux_nth : forall {r c} ri ci c_init (m : mat r c) a,
-    ri < r -> ci < c ->
-    nth ci (mrow_aux ri c_init m) a = m ri (ci + c_init)%nat.
-  Proof.
-    intros r c. gd r.
-    induction c.
-    - intros. lia.
-    - intros r ri ci. induction ci.
-      + intros. simpl. auto.
-      + intros. simpl. replace (S (ci + c_init)) with (ci + (S c_init))%nat.
-        apply IHc; auto. lia. lia.
-  Qed.
-  
-  (** (mrow m i)[j] = m[i][j] *)
-  Lemma mrow_nth : forall {r c} ri ci (m : mat r c) a,
-    ri < r -> ci < c ->
-    nth ci (mrow ri m) a = m ri ci.
-  Proof.
-    intros. unfold mrow. rewrite mrow_aux_nth; auto.
-  Qed.
-  
-  (* Fetch a column *)
-
-  (* Aux function, cnt initial is 0 *)
-  Fixpoint MCol_aux (r c : nat) (ci : nat) (cnt : nat) (m : mat r c) 
-    : list A := match r with
-    | O => nil
-    | S r' => m cnt ci :: (MCol_aux r' c ci (S cnt) m)
-    end.
-  Definition MCol {r c : nat} (ci : nat) (m : mat r c) := MCol_aux r c ci 0 m.
-
-  (** Vectors / Matrices to Lists *)
-  
-  (* Vector to List *)
-  Definition V2l {n} (v : Vector n):= MCol 0 v.
-  
-  (* 构造具体的矩阵 *)
-  Definition mat_1_1 (a11 : E.A) : mat 1 1.
-  Proof.
-    refine (l2m [[a11]]); auto.
-  Defined.
-  
-  Definition mat_3_3 (a11 a12 a13 a21 a22 a23 a31 a32 a33 : A) : mat 3 3.
-  Proof.
-    refine (l2m [[a11;a12;a13]; [a21;a22;a23]; [a31;a32;a33]]); auto.
-  Defined.
-  
-  (* 零矩阵和单位矩阵 *)
-  
-  (* Identity mat *)
-  Definition mat1 (n : nat) : mat n n := 
-    fun i j => if (i =? j)%nat then E.A1 else A0.
-
-  (* Zero mat *)
-  Definition mat0 (m n : nat) : mat m n := fun _ _ => A0. 
-  
-  
-  (* 矩阵映射 *)
-  Definition mmap {r c} (f : A -> A) (m : mat r c) : mat r c :=
-    fun i j => f (m i j).
-  
-  Definition mmap2 {r c} (f : A -> A -> A) (m1 m2 : mat r c) : mat r c :=
-    fun i j => f (m1 i j) (m2 i j).
-  
-  Lemma mmap2_comm : forall {r c} (f : A -> A -> A)
-    (f_comm : forall a b : A, f a b = f b a) (m1 m2 : mat r c), 
-    mmap2 f m1 m2 == mmap2 f m2 m1.
-  Proof.
-    intros r c f H1. intros m1 m2. intros i j Hi Hj.
-    unfold mmap2. auto.
-  Qed.
-  
-  Lemma mmap2_assoc : forall {r c} (f : A -> A -> A)
-    (f_assoc : forall a b c, f a (f b c) = f (f a b) c) (m1 m2 m3 : mat r c), 
-    mmap2 f (mmap2 f m1 m2) m3 == mmap2 f m1 (mmap2 f m2 m3).
-  Proof.
-    intros r c f H1. intros m1 m2 m3. intros i j Hi Hj.
-    unfold mmap2. auto.
-  Qed.
-  
-  
-  (* 矩阵加法 *)
-  Definition madd {m n : nat} (A B : mat m n) : mat m n 
-    := fun i j => A i j + B i j.
-
-  Infix "+" := madd (at level 50, left associativity) : matrix_scope.
-  
-  Lemma madd_comm : forall {m n} (A B : mat m n), A + B == (B + A)%M.
-  Proof.
-    intros m n A B i j Hi Hj.
-    unfold madd. ring.
-  Qed.
-  
-  Lemma madd_assoc : forall {m n} (A B C : mat m n), 
-    (A + B) + C == (A + (B + C))%M.
-  Proof.
-    intros m n A B C i j Hi Hj. 
-    unfold madd. ring.
-  Qed.
-  
-  Lemma madd_0_l : forall {m n} (A : mat m n), mat0 m n + A == A. 
-  Proof.
-    intros m n A i j Hi Hj.
-    unfold mat0, madd. ring.
-  Qed.
-  
-  (* 加法与 meq 相容 *)
-  Add Parametric Morphism (r c : nat) : madd
-    with signature (@meq r c) ==> meq ==> meq as madd_mor.
-  Proof.
-    intros. unfold meq in *. intros. unfold madd. rewrite H,H0; auto.
-  Qed.
-  
-  (* 加法与取出具体元素的关系 *)
-  Lemma madd_ij : forall {r c} (m1 m2 : mat r c) ri ci,
-    (m1 + m2) ri ci = ((m1 ri ci) + (m2 ri ci))%A.
-  Proof.
-    intros. auto.
-  Qed.
-  
-  (* 加法与 mrow 的关系 *)
-  
-(*   Lemma mrow_aux_cntS : forall {r c} (m : mat r c) ri cnt,
-    mrow_aux ri cnt m = (m ri cnt) :: mrow_aux ri (S cnt) m.
-  Proof.
-    intros. unfold mrow_aux. simpl.
-    intros r c. gd r. induction c; intros; simpl; auto.
+  (* details about Mathcomp.matrix is complex *)
+(*   Print matrix.       (* Inductive matrix := Matrix (_:finfun_of) *)
+  Print finfun_of.    (* Inductive finfun_of := FinfunOf (_:finfun_on) *)
+  Print finfun_on.    (* Inductive finfun_on := finfun_nil | finfun_cons *)
  *)  
-  (* (m1 + m2)[0] = m1[0] + m2[0] *)
-  Lemma mrow_aux_prop1 : forall {r c} (m1 m2 : mat r c),
-    (0 < r) ->
-    mrow_aux 0 0 (m1 + m2) = 
-    ListAux.lmap2 E.Aadd (mrow_aux 0 0 m1) (mrow_aux 0 0 m2).
+  Definition mat X (r c : nat) := matrix X r c.
+  Notation M r c := (@mat X r c).
+  
+(*   (** Equality of matrix, iff, equality of the matrix data *)
+  Lemma meq_iff : forall (r c : nat) (m1 m2 : M r c), 
+    mat_data m1 = mat_data m2 <-> m1 = m2.
   Proof.
-    intros r c. gd r. induction c.
-    - intros. simpl. auto.
-    - intros. simpl. f_equal.
-      eapply nth_ext.
-      + rewrite mrow_aux_length. 
-        rewrite lmap2_length with (n := c); auto.
-        apply mrow_aux_length.
-        apply mrow_aux_length.
-      + intros. 
-        rewrite mrow_aux_length in H0.
-        rewrite mrow_aux_nth; auto.
-        rewrite lmap2_nth.
-        repeat rewrite mrow_aux_nth; auto.
-        rewrite mrow_aux_length; auto.
-        rewrite mrow_aux_length; auto.
-        Unshelve. exact A0. exact A0.
+    intros. apply meq_iff.
   Qed.
   
-  (* 矩阵减法 *)
-  Definition mopp {r c} (m : mat r c) : mat r c := fun i j => -m i j.
-  
-  Lemma mopp_mopp : forall {r c} (m : mat r c), mopp (mopp m) == m.
+  (** Not equal, iff, the data is not equal *)
+  Lemma meq_iff_not : forall (r c : nat) (m1 m2 : M r c), 
+    mat_data m1 <> mat_data m2 <-> m1 <> m2.
   Proof.
-    intros r c A i j Hi Hj.
-    unfold mopp. ring.
-  Qed.
-    
-  Definition msub {r c} (m1 m2 : mat r c) : mat r c 
-    := fun i j => m1 i j - m2 i j.
-  
-  Lemma msub_comm : forall {r c} (m1 m2 : mat r c), 
-    msub m1 m2 == mopp (msub m2 m1).
+    intros. apply meq_iff_not.
+  Qed. *)
+  (** The equality is decidable *)
+  Lemma meq_dec : forall {r c} (m1 m2 : M r c), {m1 = m2} + {m1 <> m2}.
   Proof.
-    intros m n A B i j Hi Hj.
-    unfold msub,mopp. ring.
+    intros. apply (@eq_comparable (matrix_eqType X_eqType r c)).
   Qed.
-  
-  Lemma msub_assoc : forall {r c} (m1 m2 m3 : mat r c), 
-    msub (msub m1 m2) m3 == msub m1 (madd m2 m3).
-  Proof.
-    intros m n A B C i j Hi Hj. 
-    unfold msub,madd. ring.
-  Qed.
-    
-  Lemma msub_0_l : forall {r c} (m : mat r c), msub (mat0 r c) m == mopp m.
-  Proof.
-    intros r c A i j Hi Hj.
-    unfold msub,mopp,mat0. ring.
-  Qed.
-  
-  Lemma msub_0_r : forall {r c} (m : mat r c), msub m (mat0 r c) == m.
-  Proof.
-    intros r c A i j Hi Hj.
-    unfold msub,mopp,mat0. ring.
-  Qed.
-  
-  Lemma msub_self : forall {r c} (m : mat r c), msub m m == (mat0 r c).
-  Proof.
-    intros r c A i j Hi Hj.
-    unfold msub,mat0. ring.
-  Qed.
-  
-  (* 矩阵数乘 *)
-  Definition mcmul {r c} (a : A) (m : mat r c) : mat r c :=
-    fun i j => (a * m i j)%A.
-    
-  Definition mmulc {r c} (m : mat r c) (a : A) : mat r c :=
-    fun i j => (m i j * a)%A.
 
-  Infix "c*" := mcmul (at level 40, left associativity) : matrix_scope.
-  Infix "*c" := mmulc (at level 40, left associativity) : matrix_scope.
-  
-  Lemma mmulc_eq_mcmul : forall {r c} (a : A) (m : mat r c), 
-    m *c a == a c* m.
+  (** Mathcomp issue: leq (S a) b <-> Nat.ltb a b *)
+  (* leq 是Mathcomp定义的自然数比较，Nat.ltb是Coq标准库定义的 *)
+  Fact mathcomp_leq_iff_ltb : forall a b : nat, leq (S a) b <-> Nat.ltb a b.
   Proof.
-    intros r c a A i j Hi Hj.
-    unfold mcmul,mmulc. ring.
-  Qed.
-  
-  Lemma mcmul_assoc1 : forall {r c} (a b : A) (m : mat r c), 
-    a c* (b c* m) == (a * b) c* m.
+    intros.
+    Admitted. (* 稍后再证，这个不是很难，只是很繁琐 *)
+    (* 由于两个定义差异较大，不便于直接证明，可借助归纳定义的关系 le 来证明。
+      将 Nat.ltb 转换到 le，使用 Nat.ltb_spec，
+      将 leq 转换到 le，使用 leP.
+    
+    Nat.ltb_spec : forall x y : nat, BoolSpec (lt x y) (le y x) (Nat.ltb x y)
+      当 lt x y 为真，Nat.ltb x y = true
+      当 lt x y 为假，Nat.ltb x y = false
+    leP: forall {m n : nat}, reflect (le m n) (leq m n)
+      当 le m n 为真，leq m n = true
+      当 le m n 为假，leq m n = false *)
+(*     split; intros.
+    { destruct (@leP a b). 2:{ 
+    destruct (Nat.ltb_spec a b).
+    { 
+    destruct (@leP a b), (Nat.ltb_spec a b).
+    {  a b). *)
+    
+  (** Get element of a matrix *)  
+  Definition mnth' {r c} (m : M r c) (ri ci : nat) : X.
   Proof.
-    intros r c a b A i j Hi Hj.
-    unfold mcmul,mmulc. ring.
-  Qed.
+    destruct (ri <? r) eqn:H1, (ci <? c) eqn:H2.
+    { apply mathcomp_leq_iff_ltb in H1,H2.  (* 类型转换 *)
+      pose (ri' := @Ordinal r ri H1).
+      pose (ci' := @Ordinal c ci H2).
+      exact (m ri' ci'). }
+    all: exact X0.  (* 所有其他情形都输出 X0 *)
+  Defined.
   
-  Lemma mcmul_assoc2 : forall {r c} (a b : A) (m : mat r c), 
-    a c* (b c* m) == b c* (a c* m).
+  Definition mnth {r c} (m : M r c) (ri ci : nat) : X.
+    destruct (ri < r) eqn:H1, (ci < c) eqn:H2.
+    { exact (m (@Ordinal r ri H1) (@Ordinal c ci H2)). }
+    all: exact X0.
+  Defined.
+  
+  Lemma meq_iff_mnth : forall {r c : nat} (m1 m2 : M r c),
+    m1 = m2 <-> 
+    (forall ri ci (Hri : lt ri r) (Hci : lt ci c),
+      mnth m1 ri ci = mnth m2 ri ci).
   Proof.
-    intros r c a b A i j Hi Hj.
-    unfold mcmul,mmulc. ring.
-  Qed.
+    intros. split; intros.
+    { destruct (ri < r) eqn:H1, (ci < c) eqn:H2.
+      { unfold mnth.
+      Admitted.
   
-  Lemma mcmul_distr_l : forall {r c} (a : A) (m1 m2 : mat r c), 
-    a c* (m1 + m2) == ((a c* m1) + (a c* m2))%M.
+  (** Create specific matrix *)
+  Definition mk_mat_1_1 (a11 : X) : @M 1 1 := matrix_of_fun_def 
+    (fun i j => match i,j with (* i : ordinal_finType 1 *)
+      | Ordinal 0 _, Ordinal 0 _ => a11 
+      | _,_ => X0 
+      end).
+  Definition mk_mat_3_1 (a1 a2 a3 : X) : @M 3 1 := matrix_of_fun_def 
+    (fun i j => match i,j with
+      | Ordinal 0 _, Ordinal 0 _ => a1 
+      | Ordinal 1 _, Ordinal 0 _ => a2 
+      | Ordinal 2 _, Ordinal 0 _ => a3 
+      | _,_ => X0 
+      end).
+  Definition mk_mat_3_3 (a11 a12 a13 a21 a22 a23 a31 a32 a33 : X) : @M 3 3 
+    := matrix_of_fun_def 
+    (fun i j => match i,j with
+      | Ordinal 0 _, Ordinal 0 _ => a11 
+      | Ordinal 0 _, Ordinal 1 _ => a12 
+      | Ordinal 0 _, Ordinal 2 _ => a13
+      | Ordinal 1 _, Ordinal 0 _ => a21 
+      | Ordinal 1 _, Ordinal 1 _ => a22 
+      | Ordinal 1 _, Ordinal 2 _ => a23 
+      | Ordinal 2 _, Ordinal 0 _ => a31 
+      | Ordinal 2 _, Ordinal 1 _ => a32 
+      | Ordinal 2 _, Ordinal 2 _ => a33 
+      | _,_ => X0 
+      end).
+  Definition mk_mat_2_2 (a11 a12 a21 a22 : X) : @M 2 2 
+    := matrix_of_fun_def 
+    (fun i j => match i,j with
+      | Ordinal 0 _, Ordinal 0 _ => a11 
+      | Ordinal 0 _, Ordinal 1 _ => a12 
+      | Ordinal 1 _, Ordinal 0 _ => a21 
+      | Ordinal 1 _, Ordinal 1 _ => a22 
+      | _,_ => X0 
+      end).
+  
+  (** Zero matrix *)
+  Definition mat0 r c : M r c
+    := matrix_of_fun_def (fun i j => X0).
+  
+  (** X matrix is a nonzero matrix *)
+  Definition matnonzero {r c} (m : M r c) : Prop := m <> mat0 r c.
+  
+  (** Unit matrix *)
+  Definition mat1 n : M n n
+    := matrix_of_fun_def (fun i j => if (i == j) then X1 else X0).
+  
+  (** Mapping of a matrix *)
+  Definition mmap {r c} (f : X -> X) (m : M r c) : M r c
+    := matrix_of_fun_def (fun i j => f (m i j)).
+  
+  (** Mapping of two matrices *)
+  Definition mmap2 {r c} (f : X -> X -> X) (m1  m2 : M r c) : M r c
+    := matrix_of_fun_def (fun i j => f (m1 i j) (m2 i j)).
+  
+  Lemma mmap2_comm : forall {r c} (f : X -> X -> X)
+    (f_comm : forall a b : X, f a b = f b a) (m1 m2 : M r c), 
+    mmap2 f m1 m2 = mmap2 f m2 m1.
   Proof.
-    intros r c a A B i j Hi Hj.
-    unfold mcmul,mmulc,madd. ring.
-  Qed.
+    intros.
+    Admitted.
   
-  Lemma mcmul_distr_r : forall {r c} (a b : A) (m : mat r c), 
-    (a + b)%A c* m == ((a c* m) + (b c* m))%M.
+  Lemma mmap2_assoc : forall {r c} (f : X -> X -> X)
+    (f_assoc : forall a b c, f a (f b c) = f (f a b) c) (m1 m2 m3 : M r c), 
+    mmap2 f (mmap2 f m1 m2) m3 = mmap2 f m1 (mmap2 f m2 m3).
   Proof.
-    intros r c a A B i j Hi Hj.
-    unfold mcmul,mmulc,madd. ring.
-  Qed.
+    intros.
+    Admitted.
   
-  Lemma mcmul_1 : forall {r c} (m : mat r c), 
-    mcmul E.A1 m == m.
+  (** Addition of matrix *)
+  Definition madd {r c} (m1 m2 : M r c)
+    := matrix_of_fun_def (fun i j => Xadd (m1 i j) (m2 i j)).
+  Global Notation "m1 + m2" := (madd m1 m2) : mat_scope.
+  
+  Lemma madd_comm : forall {r c} (m1 m2 : M r c), m1 + m2 = m2 + m1.
   Proof.
-    intros r c A i j Hi Hj.
-    unfold mcmul,mmulc,madd. ring.
-  Qed.
+    Admitted.
   
-  (* 矩阵转置 *)
-  Definition mtrans {r c} (m : mat r c): mat c r :=
-    fun x y => m y x.
-  
-  Notation "A ⊤" := (mtrans A) (at level 0) : matrix_scope. 
-  
-  Lemma mtrans_trans : forall {r c} (m : mat r c), mtrans (mtrans m) == m.
+  Lemma madd_assoc : forall {r c} (m1 m2 m3 : M r c),
+    (m1 + m2) + m3 = m1 + (m2 + m3).
   Proof.
-    intros. unfold mtrans. intros i j Hi Hj. auto.
-  Qed.
+    Admitted.
   
-  (* 矩阵乘法 *)
-  Definition mmul {r c A : nat} (A : mat r c) (B : mat c A) : mat r A := 
-    fun x z => Tsum (fun y => A x y * B y z) c.
+  Lemma madd_0_l : forall {r c} (m : M r c), (mat0 r c) + m = m.
+  Proof.
+    Admitted.
   
-  Infix "×" := mmul (at level 40, left associativity) : matrix_scope.
+  Lemma madd_0_r : forall {r c} (m : M r c), m + (mat0 r c) = m.
+  Proof.
+    Admitted.
   
+  (** Opposite of matrix *)
+  Definition mopp {r c} (m : M r c) : M r c
+    := matrix_of_fun_def (fun i j => Xopp (m i j)).
+  Global Notation "- m" := (mopp m) : mat_scope.
+    
+  Lemma mopp_opp : forall {r c} (m : M r c), - - m = m.
+  Proof.
+    Admitted.
   
-  (** A useful tactic for solving A == B for concrete A, B *)
+  Lemma mopp_exchange : forall {r c} (m1 m2 : M r c), 
+    -m1 = m2 <-> m1 = -m2.
+  Proof.
+    Admitted.
+  
+  Lemma mopp_mat0 : forall {r c}, - (mat0 r c) = mat0 r c.
+  Proof.
+    Admitted.
+  
+  Lemma madd_opp : forall {r c} (m : M r c), m + (-m) = mat0 r c.
+  Proof.
+    Admitted.
+  
+  Definition msub {r c} (m1 m2 : M r c)
+    := matrix_of_fun_def (fun i j => Xadd (m1 i j) (Xopp (m2 i j))).
+  Global Notation "m1 - m2" := (msub m1 m2) : mat_scope.
+  
+  Lemma msub_comm : forall {r c} (m1 m2 : M r c), m1 - m2 = - (m2 - m1).
+  Proof.
+    Admitted.
+  
+  Lemma msub_assoc : forall {r c} (m1 m2 m3 : M r c), 
+    msub (msub m1 m2) m3 = msub m1 (madd m2 m3).
+  Proof.
+    Admitted.
+    
+  Lemma msub_0_l : forall {r c} (m : M r c), msub (mat0 r c) m = mopp m.
+  Proof.
+    Admitted.
+  
+  Lemma msub_0_r : forall {r c} (m : M r c), msub m (mat0 r c) = m.
+  Proof.
+    Admitted.
+  
+  Lemma msub_self : forall {r c} (m : M r c), msub m m = (mat0 r c).
+  Proof.
+    Admitted.
+  
+  (** 矩阵数乘 *)
+  Definition mcmul {r c} (a : X) (m : M r c) : M r c
+    := matrix_of_fun_def (fun i j => Xmul a (m i j)).
+    
+  Global Notation "a c* m" := (mcmul a m) : mat_scope.
+  
+  Definition mmulc {r c} (m : M r c) (a : X) : M r c
+    := matrix_of_fun_def (fun i j => Xmul (m i j) a).
+  
+  Global Notation "m *c a" := (mmulc m a) : mat_scope.
+  
+  Lemma mmulc_eq_mcmul : forall {r c} (a : X) (m : M r c), 
+    mmulc m a = mcmul a m.
+  Proof.
+    Admitted.
 
-  Ltac solve_end :=
-    match goal with
-    | H : lt _ O |- _ => apply Nat.nlt_0_r in H; contradict H
+  Lemma mcmul_assoc : forall {r c} (a b : X) (m : M r c), 
+    a c* (b c* m) = (a * b) c* m.
+  Proof.
+    Admitted.
+  
+  Lemma mcmul_perm : forall {r c} (a b : X) (m : M r c), 
+    a c* (b c* m) = b c* (a c* m).
+  Proof.
+    Admitted.
+  
+  Lemma mcmul_add_distr_l : forall {r c} (a : X) (m1 m2 : M r c), 
+    mcmul a (madd m1 m2) = madd (mcmul a m1) (mcmul a m2).
+  Proof.
+    Admitted.
+  
+  Lemma mcmul_add_distr_r : forall {r c} (a b : X) (m : M r c), 
+    mcmul (Xadd a b) m = madd (mcmul a m) (mcmul b m).
+  Proof.
+    Admitted.
+  
+  (* 0 c* m = mat0 *)
+  Lemma mcmul_0_l : forall {r c} (m : M r c), X0 c* m = mat0 r c.
+  Proof.
+    Admitted.
+  
+  (* 1 * m = m *)
+  Lemma mcmul_1_l : forall {r c} (m : M r c), 
+    mcmul X1 m = m.
+  Proof.
+    Admitted.
+  
+  (* (-a) * m = - (a * m) *)
+  Lemma mcmul_neg : forall {r c} a (m : M r c), 
+    (Xopp a) c* m = - (a c* m).
+  Proof.
+    Admitted.
+  
+  (* (-a) * (- m) = (a * m) *)
+  Lemma mcmul_neg_mopp : forall {r c} a (m : M r c), 
+    (Xopp a) c* (mopp m) = (a c* m).
+  Proof.
+    Admitted.
+
+  (* a * m = m -> a = 1 \/ m = 0 *)
+  Lemma mcmul_same_imply_coef1_or_mzero : forall {r c} a (m : M r c),
+    a c* m = m -> (a = X1) \/ (m = mat0 r c).
+  Proof.
+    Abort.
+  
+  (* 某两个非零矩阵存在k倍关系，则系数k不为0 *)
+  Lemma mat_eq_mcmul_implfy_coef_neq0 : forall {r c} (m1 m2 : M r c) k,
+    matnonzero m1 -> matnonzero m2 -> (m1 = k c* m2) -> k <> X0.
+  Proof.
+    Abort.
+  
+  (* 非零矩阵乘以k倍为零矩阵，则k为0 *)
+  Lemma mcmul_mnonzero_eq0_imply_k0 : forall {r c} (m : M r c) k,
+    matnonzero m -> mat0 r c = k c* m -> k = X0.
+  Proof.
+    Abort.
+    
+  (** 矩阵转置 *)
+  Definition mtrans {r c} (m : M r c): M c r := matrix_of_fun_def 
+    (fun i j => m j i).
+  
+  Global Notation "m 'ᵀ'" := (mtrans m) : mat_scope.
+  
+  Lemma mtrans_trans : forall {r c} (m : M r c), mtrans (mtrans m) = m.
+  Proof.
+    Admitted.
+
+  (** 矩阵乘法 *)
+  Definition mmul {r c s} (m1 : M r c) (m2 : M c s) : M r s :=
+    mulmx m1 m2.  (* @mulmx X_ringType r c s m1 m2 *)
+  Global Notation "m1 * m2" := (mmul m1 m2) : mat_scope.
+  
+  Lemma mmul_add_distr_l : forall {r c X} (m1 : M r c) (m2 m3 : M c X),
+    m1 * (m2 + m3) = m1 * m2 + m1 * m3.
+  Proof.
+    Admitted.
+  
+  Lemma mmul_add_distr_r : forall {r c s} (m1 m2 : M r c) (m3 : M c s),
+    (m1 + m2) * m3 = (m1 * m3) + (m2 * m3).
+  Proof.
+    Admitted.
+  
+  Lemma mmul_assoc : forall {r c s X} (m1 : M r c) (m2 : M c s) 
+    (m3 : M s X),
+    (m1 * m2) * m3 = m1 * (m2 * m3).
+  Proof. intros. apply Logic.eq_sym. apply mulmxA. Qed.
+  
+  Lemma mmul_0_l : forall {r c X} (m : M c X), (mat0 r c) * m = mat0 r X.
+  Proof.
+    Admitted.
+  
+  Lemma mmul_0_r : forall {r c X} (m : M r c), m * (mat0 c X) = mat0 r X.
+  Proof.
+    Admitted.
+  
+  Lemma mmul_1_l : forall {r c} (m : M r c), (mat1 r) * m = m.
+  Proof.
+    Admitted.
+  
+  Lemma mmul_1_r : forall {r c} (m : M r c), m * (mat1 c) = m.
+  Proof.
+    Admitted.
+  
+(*   (** Vector type *)
+  Definition vecr n := M 1 n.
+  Definition vecc n := M n 1.
+  
+  (** ** Construct a matrix with a vector and a a matrix *)
+  
+  (** Construct by row *)
+  Definition mconsr {r c} (v : vecr c) (m : M r c) : M (S r) c.
+  Proof.
+    destruct v,m.
+    refine (mk_mat ((hd [] mat_data) :: mat_data0) _ _).
+    - simpl. f_equal. auto.
+    - simpl. split; auto.
+      destruct mat_data; simpl in *; try lia.
+  Defined.
+  
+  (** Construct by column *)
+  Definition mconsc {r c} (v : vecc r) (m : M r c) : M r (S c).
+  Proof.
+    destruct v as [v], m as [m].
+    refine (mk_mat (consc (hdc X0 v) m) _ _).
+    - apply consc_height; auto. rewrite hdc_length; auto.
+    - apply consc_width; auto. rewrite hdc_length; subst; auto.
+  Defined. *)
+  
+  (** list list 与 矩阵互转 *)
+  
+(*   (* 这里条件太强了，其他矩阵实现不一定能满足，因此重新做一份 *)
+  Definition l2m_old {r c} (dl : list (list X)) (H1 : length dl = r)
+    (H2 : width dl c) : M r c := mk_mat dl H1 H2. *)
+
+  Definition l2m {r c} (dl : list (list X)) : M r c.
+(*   Proof.
+    destruct (ri <? r) eqn:H1, (ci <? c) eqn:H2.
+    { apply mathcomp_leq_iff_ltb in H1,H2.  (* 类型转换 *)
+      pose (ri' := @Ordinal r ri H1).
+      pose (ci' := @Ordinal c ci H2).
+      exact (m ri' ci'). }
+    all: exact X0.  (* 所有其他情形都输出 X0 *)
+  Defined.
+    matrix_of_fun_def (fun i j =>
+      match 
+     dlnth Xmul (m i j) a). *)
+     apply (matrix_of_fun_def (fun i j => X0)).
+     Defined.
+     
+  (* 检查 finfun_on 的构造 *)
+  Section check_finfun_on.
+    Variable r c : nat.
+    Let fin_r_c_T := prod_finType (ordinal_finType r) (ordinal_finType c).
+    
+    (* 复杂的形式 *)
+(*     Check @finfun_on fin_r_c_T (fun _ : 'I_r * 'I_c => X)
+      (@enum_mem fin_r_c_T
+        (@mem ('I_r * 'I_c) (predPredType ('I_r * 'I_c))
+          (@PredOfSimpl.coerce ('I_r * 'I_c) (pred_of_argType ('I_r * 'I_c))))).
+    
+    (* 简单的形式，受到类型推断的支持 *)
+    Check finfun_on (fun _ : 'I_r * 'I_c => X)
+      (enum_mem (mem (PredOfSimpl.coerce (pred_of_argType ('I_r * 'I_c))))). *)
+  End check_finfun_on.
+  
+  (** 将 finfun_on 转换为简单的 list (list X) *)
+  Definition finfun_on_to_dlist (r c : nat) (f : finfun_on 
+    (fun _ : 'I_r * 'I_c => X) 
+    (enum_mem (mem (PredOfSimpl.coerce (pred_of_argType ('I_r * 'I_c)))))
+    ) : list (list X) :=
+    match f with
+    | finfun_nil => []
+    | finfun_cons _ _ _ _ => []
     end.
-                  
-  Ltac by_cell := 
-    intros;
-    let i := fresh "i" in 
-    let j := fresh "j" in 
-    let Hi := fresh "Hi" in 
-    let Hj := fresh "Hj" in 
-    intros i j Hi Hj; try solve_end;
-    repeat (destruct i as [|i]; simpl; [|apply lt_S_n in Hi]; try solve_end); clear Hi;
-    repeat (destruct j as [|j]; simpl; [|apply lt_S_n in Hj]; try solve_end); clear Hj.
-
-  Ltac lma := by_cell; compute; ring.
-  
-  Lemma mmul_madd_distr_l : forall {m n o : nat} (A : mat m n) (B C : mat n o), 
-                             A × (B + C) == (A × B + A × C)%M.
+    
+  Definition m2l {r c} (m : M r c) : list (list X).
   Proof.
-    intros. intros i j _ _.
-    unfold madd, mmul.
-    rewrite <- Tsum_plus.
-    apply Tsum_eq; intros. ring.
-  Qed.
+    destruct m. destruct f.
+    apply (finfun_on_to_dlist r c f).
+  Defined.
   
-  Lemma mmul_madd_distr_r : forall {m n o : nat} (A B : mat m n) (C : mat n o), 
-                           (A + B) × C == (A × C + B × C)%M.
-  Proof. 
-    intros. intros i j _ _.
-    unfold madd, mmul.
-    rewrite <- Tsum_plus.
-    apply Tsum_eq; intros. ring.
-  Qed.
-
-  Lemma mmul_assoc : forall {m n o p : nat} (A : mat m n) (B : mat n o) 
-    (C: mat o p), (A × B) × C == A × (B × C).
+  Lemma m2l_length : forall {r c} (m : M r c), length (m2l m) = r.
   Proof.
-    intros m n o p A B C i j Hi Hj.
-    unfold mmul.
-    induction n.
-    + simpl.
-      clear B.  (* 丢掉一个前提。*)
-      induction o. reflexivity.
-      simpl. rewrite IHo. ring.
-    + simpl. 
-      rewrite <- IHn.
-      rewrite Tsum_mult_l.
-      rewrite <- Tsum_plus.
-      apply Tsum_eq; intros. ring.
-  Qed.
-
-  Lemma mmul_0_l : forall {r c A} (m : mat c A), mmul (mat0 r c) m == mat0 r A.
+    Admitted.
+  Global Hint Resolve m2l_length : mat.
+  
+  Lemma m2l_width : forall {r c} (m : M r c), width (m2l m) c.
   Proof.
-    intros r c A m i j Hi Hj.
-    unfold mmul,mat0. rewrite Tsum_0. ring. intros. ring.
-  Qed.
+    Admitted.
+  Global Hint Resolve m2l_width : mat.
   
-  Lemma mmul_0_r : forall {r c A} (m : mat r c), mmul m (mat0 c A) == mat0 r A.
+  Lemma m2l_l2m_id : forall {r c} (dl : list (list X)) (H1 : length dl = r)
+    (H2 : width dl c), @m2l r c (l2m dl) = dl.
   Proof.
-    intros r c A m i j Hi Hj.
-    unfold mmul,mat0. rewrite Tsum_0. ring. intros. ring.
-  Qed.
+    Admitted.
   
-  Lemma mmul_1_l : forall {m n : nat} (A : mat m n), 
-    mat1 m × A == A.
+  Lemma l2m_m2l_id : forall {r c} (m : M r c), l2m (m2l m) = m. 
   Proof.
-    intros m n A i j Hi Hj.
-    unfold mmul.
-    eapply Tsum_unique. apply Hi.
-    unfold mat1. rewrite Nat.eqb_refl. ring.
-    intros x Hx. unfold mat1.
-    apply Nat.eqb_neq in Hx. rewrite Hx. ring.
-  Qed.
+    Admitted.
   
-  Lemma mmul_1_r : forall {m n : nat} (A : mat m n), 
-    A × mat1 n == A.
+  Lemma l2m_inj : forall {r c} (d1 d2 : list (list X)),
+    length d1 = r -> width d1 c -> 
+    length d2 = r -> width d2 c -> 
+    d1 <> d2 -> @l2m r c d1 <> l2m d2.
   Proof.
-    intros m n A i j Hi Hj.
-    unfold mmul.
-    eapply Tsum_unique. apply Hj.
-    unfold mat1. rewrite Nat.eqb_refl. ring.
-    intros x Hx. unfold mat1.
-    apply Nat.eqb_neq in Hx. rewrite Nat.eqb_sym. rewrite Hx. ring.
+    Admitted.
+    
+  Lemma l2m_surj : forall {r c} (m : M r c), 
+    (exists d, l2m d = m).
+  Proof.
+    Admitted.
+    
+  Lemma m2l_inj : forall {r c} (m1 m2 : M r c),
+    m1 <> m2 -> m2l m1 <> m2l m2.
+  Proof.
+    Admitted.
+    
+  Lemma m2l_surj : forall {r c} (d : list (list X)), 
+    length d = r -> width d c -> 
+    (exists m, @m2l r c m = d).
+  Proof.
+    Admitted.
+    
+  (** ** Other OPs and PROPs *)
+  
+  (** Convert between tuples and matrix *)
+  
+  (** 3x3元组 转换为 mat_3x3 *)
+  Definition t2m_3x3 (t : @T_3x3 X) : M 3 3.
+  Proof.
+    destruct t as ((t1,t2),t3).
+    destruct t1 as ((a11,a12),a13).
+    destruct t2 as ((a21,a22),a23).
+    destruct t3 as ((a31,a32),a33).
+    exact (mk_mat_3_3 a11 a12 a13 a21 a22 a23 a31 a32 a33).
+  Defined.
+  
+  (** mat_3x3 转换为 3x3元组 ((a11,a12,a13),(a21,a22,a23),(a31,a32,a33)) *)
+  Definition m2t_3x3 (m : M 3 3) : @T_3x3 X :=
+    ((mnth m 0 0, mnth m 0 1, mnth m 0 2), 
+     (mnth m 1 0, mnth m 1 1, mnth m 1 2),
+     (mnth m 2 0, mnth m 2 1, mnth m 2 2)).
+(*      
+  Definition m2t_3x3 (m : M 3 3) : @T_3x3 X.
+    destruct m. rename mat_data into dl.
+    remember (hd [] dl) as l1.
+    remember (hd [] (tl dl)) as l2.
+    remember (hd [] (tl (tl dl))) as l3.
+    remember (hd X0 l1, hd X0 (tl l1), hd X0 (tl (tl l1))) as t1.
+    remember (hd X0 l2, hd X0 (tl l2), hd X0 (tl (tl l2))) as t2.
+    remember (hd X0 l3, hd X0 (tl l3), hd X0 (tl (tl l3))) as t3.
+    exact (t1, t2, t3).
+  Defined.
+ *)  
+  (** 3x3元组 转 3x3矩阵 再转 3x3元组，二者相等 *)
+  Lemma m2t_t2m_id_3x3 : forall (x : @T_3x3 X), m2t_3x3 (t2m_3x3 x) = x.
+(*     Proof.
+    destruct x as ((t1,t2),t3).
+    destruct t1 as ((a11,a12),a13).
+    destruct t2 as ((a21,a22),a23).
+    destruct t3 as ((a31,a32),a33).
+    simpl. auto.
+  Qed. *)
+  Admitted.
+  
+  (** 3x3矩阵 转 3x3元组 再转 3x3矩阵，二者相等 *)
+(*   Lemma t2m_m2t_id_3x3 (m : M 3 3) : t2m_3x3 (m2t_3x3 m) = m.
+    Proof.
+    unfold t2m_3x3, m2t_3x3. unfold mk_mat_3_3.
+    intros ri ci Hi Hj.
+    do 3 (destruct ri; [do 3 (destruct ci; auto); lia | idtac]). lia.
   Qed.
-
-End MatrixImpl.
-
-
-(** Function版本的Matrix起始两个参数没有约束作用 *)
-
-(* From FCS Require Import RingTypeZ.
-
-Module FunctionMatrix_Dim_NoEffect.
-
-  Module MZ := MatrixImpl RingTypeZ.
-  Import MZ.
-
-  Open Scope Z.
+  Admitted. *)
+  Lemma t2m_m2t_id_3x3 : forall (m : M 3 3),
+    t2m_3x3 (m2t_3x3 m) = m.
+  Proof.
+    Admitted.
   
-  Definition m1 : mat 3 3 := mat_3_3 1 2 3 4 5 6 7 8 9.
+  
+  (** 取出1x1矩阵的第 0,0 个元素 *)
+  Definition scalar_of_mat (m : M 1 1) := mnth m 0 0.
 
-  (* 这里输入任何下标都可以 *)
-  Check m1 : mat 3 5.
+  (** 3阶方阵的行列式 *)
+  Definition det_of_mat_3_3 (m : M 3 3) : X :=
+    let '((a11,a12,a13),(a21,a22,a23),(a31,a32,a33)) :=
+      m2t_3x3 m in
+    let b1 := (a11 * a22 * a33)%X in
+    let b2 := (a12 * a23 * a31)%X in
+    let b3 := (a13 * a21 * a32)%X in
+    let c1 := (a11 * a23 * a32)%X in
+    let c2 := (a12 * a21 * a33)%X in
+    let c3 := (a13 * a22 * a31)%X in
+    let b := (b1 + b2 + b3)%X in
+    let c := (c1 + c2 + c3)%X in
+      (b - c)%X.
+
+  (** V3斜对称矩阵 *)
+(*   Definition skew_sym_mat_of_v3 (v : V3) : M 3 3.
+  Proof.
+    destruct (v3_to_t3 v) as [[x y] z].
+    refine (mk_mat_3_3 
+      X0    (-z)    y
+      z     X0     (-x)
+      (-y)  x       X0)%A.
+  Defined. *)
   
-  Compute @m2l_aux 1 3 0 m1.
-  Compute @m2l_aux 2 3 0 m1.
+  (** V3叉乘，向量积 *)
+(*   Definition v3cross (v1 v2 : V3) : vec 3 := (skew_sym_mat_of_v3 v1) × v2. *)
   
-  (* 取出一行的辅助函数，第二个参数为列起始值，下标越界后不再保证正确 *)
-  Compute mrow_aux 0 0 m1.
-  Compute mrow_aux 0 1 m1.
+  (** 矩阵是否为SO3（李群，旋转群） *)
+  Definition so3 (m : M 3 3) : Prop := 
+    let so3_mul_unit : Prop := (m ᵀ) * m = mat1 3 in
+    let so3_det : Prop := (det_of_mat_3_3 m) = X1 in
+      so3_mul_unit /\ so3_det.
   
-  Compute mrow 1 m1.
-  Compute mrow 3 m1.
-  
-End FunctionMatrix_Dim_NoEffect.
- *)
+End MatrixThy.
+
