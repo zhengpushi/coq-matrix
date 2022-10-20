@@ -1,0 +1,58 @@
+# ===================================================================
+# MFMM: Multiple Formal Matrix Models in Coq
+# E-mail: zhengpushi@nuaa.edu.cn
+# Copyright FEM-NUAA.CN 2022
+# ===================================================================
+
+-R ./ ""
+
+-arg -w -arg -notation-overridden
+-arg -w -arg -ambiguous-paths
+-arg -w -arg -local-declaration
+# -arg -w -arg -deprecated-hint-without-locality
+# -arg -w -arg -redundant-canonical-projection
+
+
+# ====== CoqExt ====================
+CoqExt/BasicConfig.v
+CoqExt/FieldStruct.v
+#CoqExt/BoolExt.v
+#CoqExt/ListExt_test.v
+CoqExt/NatExt.v
+CoqExt/ZExt.v
+CoqExt/QExt.v
+CoqExt/QcExt.v
+CoqExt/RExt.v
+CoqExt/RAST.v
+CoqExt/TuplesExt.v
+CoqExt/StrExt.v
+CoqExt/ListExt.v
+CoqExt/ListListExt.v
+#CoqExt/FuncExt.v
+
+
+# ====== Math ====================
+Matrix/MatrixThySig.v
+Matrix/VectorThySig.v
+Matrix/DepRec/Matrix.v
+Matrix/DepRec/MatrixThy.v
+Matrix/DepRec/VectorThy.v
+Matrix/DepList/Matrix.v
+Matrix/DepList/MatrixThy.v
+Matrix/DepList/VectorThy.v
+Matrix/DepPair/Vector.v
+Matrix/DepPair/Matrix.v
+Matrix/DepPair/MatrixThy.v
+Matrix/DepPair/VectorThy.v
+Matrix/NatFun/Sequence.v
+Matrix/NatFun/MatrixThy.v
+Matrix/NatFun/VectorThy.v
+Matrix/NatFun/Inversion.v
+Matrix/MatrixAll.v
+Matrix/MatrixHomo/HomomorphismThy.v
+Matrix/MatrixHomo/IsomorphismThy.v
+Matrix/MatrixHomo/MatrixHomomorphism.v
+Matrix/MatrixHomo/MatrixIsomorphism.v
+Matrix/VectorAll.v
+Matrix/DepRec/VectorR.v
+Matrix/NatFun/VectorR.v

@@ -1,0 +1,138 @@
+2021/6/19 11:40
+工作描述
+1. 熟悉Mat库，并自行完成证明。
+2. 重命名部分名称，以便规范化命名。
+3. 建立了 List_aux 库，其他文件中的list函数移动至此，并使用list标准库自带的实现。
+4. 证明简化
+5. 尽量保持最大兼容性，例如 map : A -> B 与 map : A -> A，前者的兼容性更好。
+
+证明心得体会
+1. 按照定义中的主变量来归纳。
+2. 多个函数嵌套时，先考虑最外层函数。
+3. 若1/2原则冲突时，则需要先考虑1，此时主变量可能是函数作用后的复合变量，可以将内层所有变量同时归纳。
+4. 简单情形，可以多个变量一起归纳，条件是能够显著的简化表达式。
+5. 一个通用原则是，简化表达式的复杂度，包括函数定义和类型定义。
+
+一、改动的名称记录
+---------------------------[list function]------------------
+新名称                  原名称                  功能                            备注
+width                   width                   二维表中所有子表等长            比较重要的一个谓词
+map                     list_map                列表的映射                      标准库
+map_app                 list_map_app                                          标准库
+app_assoc               app_assoc                                              标准库
+app_nil_r               app_nil_r                                              标准库
+app_length              length_app                                            标准库，签名稍有不同
+app_length              height_mapp                                            标准库，签名稍有不同
+app_width               width_mapp          
+app_width               width_app                                              相似性质，合并。
+app_comm_cons           cons_app                                              标准库
+rev_length              length_rev                                            标准库
+rev_unit                cons_rev                                              标准库  rev (l ++ [a]) = a :: rev l
+rev_app_distr           rev_app                                                标准库
+list_app_dlist          list_app
+listmap2                list_each                                              两个列表的映射
+listmap2_app            新增
+listmap2_dnil_l         新增
+listmap2_tail           新增
+listmap2_length         list_each_length
+listmap2_comm           list_each_comm                                        去掉了长度条件
+listmap2_assoc          list_each_assoc
+listdot                 product'
+listdot_comm            product'_comm                                          使用 l_map2_comm 实现
+listdot_nil_r           product'_nil_r
+listdot_to_list         map2_distr_l                          列表点积对列表映射的分配律
+listadd_zero_l          list_add_zero_l
+listadd_zero_r          list_add_zero_r
+listsub_zero_l          list_sub_zero_l
+listsub_zero_r          list_sub_zero_r
+listsub_comm            list_sub_opp        l1 - l2 = - (l2 - l1)
+listsub_assoc1          list_sub_comm        (l1 - l2) - l3 = (l1 - l3) - l2
+listsub_assoc2          list_sub_assoc      (l1 - l2) - l3 = l1 - (l2 + l3)
+listsub_self            list_sub_self        l - l = 0
+listzero                list_o              元素都是A0的列表
+listzero_length         list_o_length
+listunit                list_i              只有一个元素是A1其余都是A0的列表
+listunit                dlist_i'                                              实现不同，少一个参数
+listunit_length         length_list_i
+listunit_n_0            list_i_n_0
+dnil                    nil_list            由空表构成的二维表
+dnil_height             height_nil_list
+dnil_width              width_nil_list
+dnil_app                nil_list_app
+dnil_app                nil_list_mapp                                          重复功能
+dnil_rev                rev_nil_list
+dlist_h0_iff            height_dlist_0
+dlist_w0_eq_dnil        width_dlist_0                                          签名稍有不同
+dlistappr               mapp                二维表的按行拼接                  标准库的app
+dlistappc               新增                二维表的按列拼接
+dlistmap                dlist_map            一个二维表映射到另一个二维表      重新实现
+dlistmap_height         height_dlist_map                                      签名稍有不同
+dlistmap_width          width_dlist_map                                        更强结论
+dlistmap2_cons          mat_each'_cons
+dlistmap2_app           mat_each'_app                                          简化证明
+dlistmap2               mat_each'            两个二维表映射到一个二维表        重新实现
+dlistmap2_height        height_mat_each'
+dlistmap2_width         width_mat_each'
+dlistmap2_comm          matrix_each'_comm
+dlistmap2_assoc         matrix_each'_assoc
+dlistmap2_dnil_l        mat_each'_nil_list_l
+dlistmap2_tail          mat_each'_tail
+dlistzero               dlist_o
+dlistzero_height        dlist_o_height
+dlistzero_width         dlist_o_width
+dlistzero_w0_eq_dnil    dlist_o_m_0
+dlistzero_app_row       list_o_app
+dlistzero_app_col       新增
+dlistunit_height        height_dlist_i'
+dlistunit_width         width_dlist_i'
+dlistadd_zero_l         dlist_add_zero_l
+dlistadd_zero_r         dlist_add_zero_r
+dlistsub_comm           dlist_sub_opp        dl1 - dl2 = -(dl2 - dl1)          简化证明
+dlistsub_assoc2         dlist_sub_assoc      (dl1-dl2)-dl3 = dl1-(dl2+dl3)      简化证明
+dlistsub_zero_l         dlist_sub_zero_l
+dlistsub_zero_r         dlist_sub_zero_r
+hdc                     headcolumn
+hdc_length              length_headcolumn
+tlc                     tailcolumn
+dlist_trans             gettrans            二维表转置                        实现不同，先易后难或先难后易。
+ldotdl                  l_mul_dl            一维表逐个点积二维表
+dldotdl                 dl_mul_dl            二维表逐个点积二维表
+
+---------------------------[Mat_map]------------------
+新名称                  原名称              功能                              备注
+matmapdl                matrix_map'          一个矩阵映射到二维表
+matmapdl_height         height_matrix_map
+matmapdl_width          width_matrix_map
+matmapdl_sub_comm       matrix_sub_opp
+matmap2dl               mat_each            两个矩阵映射到二维表
+matmap2dl_height        height_mat_each
+matmap2dl_width         width_mat_each
+matmap                  matrix_map          一个矩阵映射到另一个矩阵
+matmap_mor              mat_map_mor          说明mat_map对mat_eq兼容            简化证明，直接证
+matmap2                 matrix_each          两个矩阵映射零一个矩阵
+matmap2_compat          matrix_each_compat  该操作对mat_eq兼容
+matmap2_comm            matrix_comm
+matmap2_assoc           matrix_assoc
+matmap2_mor             mat_each_mor        说明mat_map2对mat_eq兼容          简化证明，直接证
+---------------------------[Mat_IO]------------------
+新名称                  原名称              功能                              备注
+matzero                 MO
+matunit                 MI
+---------------------------[Mat_add]------------------
+新名称                  原名称              功能                              备注
+matadd_zero_l           matrix_add_zero_l
+matadd_zero_r           matrix_add_zero_r
+---------------------------[Mat_add]------------------
+新名称                  原名称              功能                              备注
+matsub_comm             matrix_sub_opp
+matsub_assoc2           matrix_sub_assoc    (m1 - m2) - m3 = m1 - (m2 + m3)
+matsub_zero_l           matrix_sub_zero_l
+matsub_zero_r           matrix_sub_zero_r
+matsub_self             matrix_sub_self
+---------------------------[Mat_mul]------------------
+新名称                  原名称              功能                              备注
+matmul_data             mat_mul_mat          矩阵相乘时的二维表生成
+matmul_add_distr_l      matrix_mul_distr_l
+matmul_add_distr_r      matrix_mul_distr_r
+matcmul                 const_mul_l          c * M
+matmulc                 const_mul_r          M * c
