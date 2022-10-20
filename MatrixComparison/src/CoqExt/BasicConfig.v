@@ -46,7 +46,9 @@ Reserved Infix    "*c"      (at level 40, left associativity).
 Reserved Notation "- a"     (at level 35, right associativity).
 Reserved Notation "/ a"     (at level 35, right associativity).
 Reserved Notation "a 'ᵀ'"   (at level 35).
-Reserved Notation "v .[ i ]" (at level 30, right associativity).
+(* this level is consistent with Mathcomp.ssreflect.ssrnotations.v *)
+Reserved Notation "v .[ i ]"
+   (at level 2, left associativity, format "v .[ i ]").
 
 
 (* ######################################################################### *)
@@ -74,7 +76,8 @@ Ltac ssplit :=
 (* ######################################################################### *)
 (** * Global notations *)
 
-Notation "~~ b" := (negb b) (at level 10) : bool_scope.
+(* this level is consistent with coq.ssr.ssrbool.v *)
+Notation "~~ b" := (negb b) (at level 35, right associativity) : bool_scope.
 
 
 (* ######################################################################### *)

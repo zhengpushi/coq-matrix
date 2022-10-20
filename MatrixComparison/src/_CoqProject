@@ -48,6 +48,7 @@ Matrix/NatFun/Sequence.v
 Matrix/NatFun/MatrixThy.v
 Matrix/NatFun/VectorThy.v
 Matrix/NatFun/Inversion.v
+Matrix/FinFun/MatrixThy.v
 Matrix/MatrixAll.v
 Matrix/MatrixHomo/HomomorphismThy.v
 Matrix/MatrixHomo/IsomorphismThy.v

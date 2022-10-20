@@ -164,7 +164,7 @@ Module VectorThy (F : FieldSig) <: VectorThySig F.
   (** Get element of vector *)
   Definition vnth {n} (v : V n) i : X := @mnth n 1 v i 0.
   
-  Notation "v .[ i ]" := (vnth v i) (at level 30) : vec_scope.
+(*   Notation "v .[ i ]" := (vnth v i) (at level 30) : vec_scope. *)
   
 (*   Definition scalar_of_mat (m : M 1 1) := mnth m 0 0. *)
 
