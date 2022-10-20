@@ -1,4 +1,4 @@
 This branch is for SETTA-2022.
 
-git url:
-https://github.com/zhengpushi/coq-matrix/tree/setta2022
+git clone url:
+$ git clone https://github.com/zhengpushi/coq-matrix.git -b setta2022
