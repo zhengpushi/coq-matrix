@@ -302,6 +302,29 @@ Qed.
 Arguments vmake_nil_eq_vconstnil {A}.
 
 
+(** get / set an element of a vector *)
+Section vget_vset.
+  Variable A : Type.
+  Variable A0 : A.
+
+  Fixpoint vget {n} (v:vec n) (i:nat) : A :=
+    match v, i with
+    | [], _ => A0
+    | a::v', 0 => a
+    | a::v', S i' => vget v' i'
+    end.
+
+  (** Note, this is not tail recursion *)
+  Fixpoint vset {n} (v:vec n) (i:nat) (x:A) : vec n :=
+    match v, i with
+    | [], _ => []
+    | a::v', 0 => x::v'
+    | a::v', S i' => a::(vset v' i' x)
+    end.
+
+End vget_vset.
+
+
 (** ** Matrix Definitions *)
 
 Section MatrixDefinition.
@@ -390,6 +413,12 @@ Section MatrixDefinition.
     apply eq_nth_iff; intros; subst; rewrite ?vmake_nth.
     rewrite ?const_nth. auto.
   Qed.
+
+  (** get / set an element of a matrix *)
+  Definition mget {r c} (m:mat r c) (i j:nat) : A :=
+    vget _ A0 (vget _ (vconst A0 c) m i) j.
+  Definition mset {r c} (m:mat r c) (i j : nat) (x:A) : mat r c :=
+    @vset _ r m i (@vset _ c (@vget _ (vconst A0 c) _ m i) j x).
   
 End MatrixDefinition.
 
@@ -398,6 +427,8 @@ Arguments mat {A}.
 Arguments mrowi {A r c}.
 Arguments mcoli {A r c}.
 Arguments mnth {A r c}.
+Arguments mget {A} A0 {r c}.
+Arguments mset {A} A0 {r c}.
 
 
 (** ** mat0, mat1 *)

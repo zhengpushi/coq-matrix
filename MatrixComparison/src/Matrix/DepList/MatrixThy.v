@@ -45,7 +45,7 @@ Module MatrixThy (F : FieldSig) <: MatrixThySig F.
   Proof.
     intros. split; intros. subst; auto.
     apply meq_iff_nth. Admitted.
-    
+
   (** 构造具体的矩阵 *)
 
   Definition mk_mat_1_1 (a11 : X) : @M 1 1 := [[a11]].
@@ -339,5 +339,9 @@ Module MatrixThy (F : FieldSig) <: MatrixThySig F.
   
   (** 取出1x1矩阵的第 0,0 个元素 *)
   Definition scalar_of_mat (m : M 1 1) := mnth m 0 0.
-    
+  
+  (** get / set an element of a matrix *)
+  Definition mget := @mget X.
+  Definition mset := @mset X.
+
 End MatrixThy.
