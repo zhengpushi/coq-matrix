@@ -8,10 +8,6 @@ let negb = function
 | true -> false
 | false -> true
 
-type ('a, 'b) sum =
-| Inl of 'a
-| Inr of 'b
-
 (** val fst : ('a1 * 'a2) -> 'a1 **)
 
 let fst = function
@@ -347,13 +343,6 @@ module Coq_Pos =
       n
  end
 
-(** val pow_pos : ('a1 -> 'a1 -> 'a1) -> 'a1 -> positive -> 'a1 **)
-
-let rec pow_pos rmul x = function
-| XI i0 -> let p = pow_pos rmul x i0 in rmul x (rmul p p)
-| XO i0 -> let p = pow_pos rmul x i0 in rmul p p
-| XH -> x
-
 (** val hd : 'a1 -> 'a1 list -> 'a1 **)
 
 let hd default0 = function
@@ -577,70 +566,7 @@ module Z =
          let (g, p) = Coq_Pos.ggcd a0 b0 in let (aa, bb) = p in ((Zpos g), ((Zneg aa), (Zneg bb))))
  end
 
-(** val z_lt_dec : z -> z -> bool **)
-
-let z_lt_dec x y =
-  match Z.compare x y with
-  | Lt -> true
-  | _ -> false
-
-(** val z_lt_ge_dec : z -> z -> bool **)
-
-let z_lt_ge_dec =
-  z_lt_dec
-
-(** val z_lt_le_dec : z -> z -> bool **)
-
-let z_lt_le_dec =
-  z_lt_ge_dec
-
 type q = { qnum : z; qden : positive }
-
-(** val qplus : q -> q -> q **)
-
-let qplus x y =
-  { qnum = (Z.add (Z.mul x.qnum (Zpos y.qden)) (Z.mul y.qnum (Zpos x.qden))); qden =
-    (Coq_Pos.mul x.qden y.qden) }
-
-(** val qmult : q -> q -> q **)
-
-let qmult x y =
-  { qnum = (Z.mul x.qnum y.qnum); qden = (Coq_Pos.mul x.qden y.qden) }
-
-(** val qopp : q -> q **)
-
-let qopp x =
-  { qnum = (Z.opp x.qnum); qden = x.qden }
-
-(** val qminus : q -> q -> q **)
-
-let qminus x y =
-  qplus x (qopp y)
-
-(** val qinv : q -> q **)
-
-let qinv x =
-  match x.qnum with
-  | Z0 -> { qnum = Z0; qden = XH }
-  | Zpos p -> { qnum = (Zpos x.qden); qden = p }
-  | Zneg p -> { qnum = (Zneg x.qden); qden = p }
-
-(** val qlt_le_dec : q -> q -> bool **)
-
-let qlt_le_dec x y =
-  z_lt_le_dec (Z.mul x.qnum (Zpos y.qden)) (Z.mul y.qnum (Zpos x.qden))
-
-(** val qpower_positive : q -> positive -> q **)
-
-let qpower_positive =
-  pow_pos qmult
-
-(** val qpower : q -> z -> q **)
-
-let qpower q0 = function
-| Z0 -> { qnum = (Zpos XH); qden = XH }
-| Zpos p -> qpower_positive q0 p
-| Zneg p -> qinv (qpower_positive q0 p)
 
 type t =
 | F1 of int
@@ -728,44 +654,7 @@ let rec fold_left f b _ = function
 | Nil -> b
 | Cons (a, n0, w) -> fold_left f (f b a) n0 w
 
-(** val z_inj_nat_rev : int -> z **)
-
-let z_inj_nat_rev n =
-  (fun fO fS n -> if n=0 then fO () else fS (n-1))
-    (fun _ -> Z0)
-    (fun _ ->
-    match Coq_Pos.of_nat n with
-    | XI p -> Zneg (Coq_Pos.succ p)
-    | XO p -> Zpos p
-    | XH -> Zneg XH)
-    n
-
 type cReal = { seq : (z -> q); scale : z }
-
-type cRealLt = z
-
-(** val cRealLt_lpo_dec :
-    cReal -> cReal -> (__ -> (int -> bool) -> int option) -> (cRealLt, __) sum **)
-
-let cRealLt_lpo_dec x y lpo =
-  let s =
-    lpo __ (fun n ->
-      let s =
-        qlt_le_dec
-          (qmult { qnum = (Zpos (XO XH)); qden = XH }
-            (qpower { qnum = (Zpos (XO XH)); qden = XH } (z_inj_nat_rev n)))
-          (qminus (y.seq (z_inj_nat_rev n)) (x.seq (z_inj_nat_rev n)))
-      in
-      if s then false else true)
-  in
-  (match s with
-   | Some a -> Inl (z_inj_nat_rev a)
-   | None -> Inr __)
-
-(** val sig_forall_dec : (int -> bool) -> int option **)
-
-let sig_forall_dec =
-  failwith "AXIOM TO BE REALIZED"
 
 type dReal = (q -> bool)
 
@@ -773,9 +662,11 @@ module type RbaseSymbolsSig =
  sig
   type coq_R
 
-  val coq_Rabst : cReal -> coq_R
+  val coq_Rabst : __
+                    (* cReal -> coq_R *)
 
-  val coq_Rrepr : coq_R -> cReal
+  val coq_Rrepr : __
+                    (* coq_R -> cReal *)
 
   val coq_R0 : coq_R
 
@@ -891,21 +782,7 @@ let iZR = function
 
 (** val total_order_T : RbaseSymbolsImpl.coq_R -> RbaseSymbolsImpl.coq_R -> bool option **)
 
-let total_order_T r1 r2 =
-  let s =
-    cRealLt_lpo_dec (RbaseSymbolsImpl.coq_Rrepr r1) (RbaseSymbolsImpl.coq_Rrepr r2) (fun _ ->
-      sig_forall_dec)
-  in
-  (match s with
-   | Inl _ -> Some true
-   | Inr _ ->
-     let s0 =
-       cRealLt_lpo_dec (RbaseSymbolsImpl.coq_Rrepr r2) (RbaseSymbolsImpl.coq_Rrepr r1) (fun _ ->
-         sig_forall_dec)
-     in
-     (match s0 with
-      | Inl _ -> None
-      | Inr _ -> Some false))
+let total_order_T = fun r1 r2 ->   let c = Float.compare r1 r2 in   if c < 0 then Some true   else (if c = 0 then None else Some false)
 
 module type RinvSig =
  sig
@@ -966,7 +843,7 @@ module FieldR =
  struct
   module FieldDefR =
    struct
-    type coq_X = RbaseSymbolsImpl.coq_R
+    type coq_X = float
 
     (** val coq_X0 : RbaseSymbolsImpl.coq_R **)
 
@@ -2691,7 +2568,7 @@ let simplPred p =
 (** val predT : 'a1 simpl_pred **)
 
 let predT =
-  simplPred (fun _ -> true)
+  (fun (_:'a1) -> true)
 
 module PredOfSimpl =
  struct
@@ -4000,10 +3877,20 @@ module Coq2_MatrixThy =
       let x_eqMixin = { Equality.op = F.coq_Xeqb; Equality.mixin_of__1 = x_eqbP } in
       Obj.magic x_eqMixin
 
+    (** val pickle : F.coq_X -> int **)
+
+    let pickle _ =
+      0
+
+    (** val unpickle : int -> F.coq_X option **)
+
+    let unpickle _ =
+      None
+
     (** val coq_X_choiceType_mixin_of : F.coq_X Countable.mixin_of **)
 
     let coq_X_choiceType_mixin_of =
-      failwith "AXIOM TO BE REALIZED"
+      { Countable.pickle = pickle; Countable.unpickle = unpickle }
 
     (** val coq_X_choiceType : Choice.coq_type **)
 
@@ -4434,46 +4321,4 @@ module MatrixAllR = MatrixAll(FieldR.FieldDefR)
 
 module MatrixR_DL = MatrixAllR.DL
 
-module FloatMatrix_DL =
- struct
-  type mat = RbaseSymbolsImpl.coq_R MatrixR_DL.mat
-
-  (** val madd :
-      int -> int -> FieldR.FieldDefR.coq_X mat2 -> FieldR.FieldDefR.coq_X mat2 ->
-      FieldR.FieldDefR.coq_X mat2 **)
-
-  let madd =
-    MatrixR_DL.madd
-
-  (** val mmul :
-      int -> int -> int -> FieldR.FieldDefR.coq_X MatrixR_DL.mat -> FieldR.FieldDefR.coq_X
-      MatrixR_DL.mat -> FieldR.FieldDefR.coq_X MatrixR_DL.mat **)
-
-  let mmul =
-    MatrixR_DL.mmul
-
-  (** val l2m :
-      int -> int -> FieldR.FieldDefR.coq_X list list -> FieldR.FieldDefR.coq_X MatrixR_DL.mat **)
-
-  let l2m =
-    MatrixR_DL.l2m
-
-  (** val m2l : int -> int -> mat -> (int * int) * FieldR.FieldDefR.coq_X list list **)
-
-  let m2l r c m =
-    ((r, c), (MatrixR_DL.m2l r c m))
-
-  (** val mget :
-      FieldR.FieldDefR.coq_X -> int -> int -> FieldR.FieldDefR.coq_X mat2 -> int -> int ->
-      FieldR.FieldDefR.coq_X **)
-
-  let mget =
-    MatrixR_DL.mget
-
-  (** val mset :
-      FieldR.FieldDefR.coq_X -> int -> int -> FieldR.FieldDefR.coq_X mat2 -> int -> int ->
-      FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X mat2 **)
-
-  let mset =
-    MatrixR_DL.mset
- end
+module DL = MatrixR_DL

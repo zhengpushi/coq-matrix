@@ -1,8 +1,7 @@
 
 test : test.ml mymatrix.ml
 	ocamlc -c mymatrix.mli
-	ocamlc -c mymatrix.ml
-	ocamlc test.ml mymatrix.cmo -o $@
+	ocamlfind ocamlc -o test -linkpkg mymatrix.ml -package unix
 
 clean :
 	rm -f test test.opt *.cmi *.cmo *.o

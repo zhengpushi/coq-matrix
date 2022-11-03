@@ -63,9 +63,12 @@ Module MatrixThy (F : FieldSig) <: MatrixThySig F.
     (* choiceType *)
     Section choiceType.
       Import Countable.
-      
-      Definition X_choiceType_mixin_of : mixin_of X.
-      Admitted.
+
+      Definition pickle (x:X) := 0%nat.
+      Definition unpickle (n:nat) : option X := None.
+      Definition pcancel : pcancel pickle unpickle. Admitted.
+      Definition X_choiceType_mixin_of : mixin_of X :=
+        Mixin pcancel.
       
       Let X_choiceMixin := ChoiceMixin X_choiceType_mixin_of.
       Canonical X_choiceType := ChoiceType X X_choiceMixin.

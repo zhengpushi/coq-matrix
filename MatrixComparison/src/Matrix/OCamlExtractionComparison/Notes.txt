@@ -1,0 +1,42 @@
+1. 抽取的 matrix.ml 文件，编译时出错（但REPL时没有错误）
+a. 将 ml 文件中的 R_abst, R_repr 手动修改为 __
+module type RbaseSymbolsSig =
+ sig
+  type coq_R
+
+  val coq_Rabst : __
+                    (* cReal -> coq_R *)
+
+  val coq_Rrepr : __
+                    (* coq_R -> cReal *)
+
+同时，将 mli 文件中的签名也修改
+module type RbaseSymbolsSig =
+ sig
+  type coq_R
+
+  val coq_Rabst : __
+                    (* cReal -> coq_R *)
+
+  val coq_Rrepr : __
+                    (* coq_R -> cReal *)
+
+b. 将 ml 文件中的 predT 修改为
+let predT =
+ (fun (_:'a1) -> true)
+
+2. #use 这类指示符只能在 REPL 时使用，编译时需要注释掉
+
+---------------------------------------------------
+
+l2m 函数的类型错误问题 (single_compile 目录的原因）
+现象：
+在REPL中，#use "xx.ml" 时，类型没有错误
+而使用 #load "xx.cmo" 或者 ocamlc 时，都会报 l2m 函数类型错误，
+因为使用 module type 传递 coq_X 类型，而它在实例化中指定为 float。
+解决：
+暂时放在同一个文件中，可以解决。
+备注：
+这是临时版本，内容不全。因该文件大部分是自动生成，而且需要手动改动，
+所以还是要想办法找到该问题。
+如何在多态时，能够在Coq和OCaml中不出现错误。

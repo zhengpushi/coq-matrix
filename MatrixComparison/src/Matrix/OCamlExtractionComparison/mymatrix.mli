@@ -3,10 +3,6 @@ type __ = Obj.t
 
 val negb : bool -> bool
 
-type ('a, 'b) sum =
-| Inl of 'a
-| Inr of 'b
-
 val fst : ('a1 * 'a2) -> 'a1
 
 val snd : ('a1 * 'a2) -> 'a2
@@ -121,8 +117,6 @@ module Coq_Pos :
   val of_succ_nat : int -> positive
  end
 
-val pow_pos : ('a1 -> 'a1 -> 'a1) -> 'a1 -> positive -> 'a1
-
 val hd : 'a1 -> 'a1 list -> 'a1
 
 val tl : 'a1 list -> 'a1 list
@@ -174,29 +168,7 @@ module Z :
   val ggcd : z -> z -> z * (z * z)
  end
 
-val z_lt_dec : z -> z -> bool
-
-val z_lt_ge_dec : z -> z -> bool
-
-val z_lt_le_dec : z -> z -> bool
-
 type q = { qnum : z; qden : positive }
-
-val qplus : q -> q -> q
-
-val qmult : q -> q -> q
-
-val qopp : q -> q
-
-val qminus : q -> q -> q
-
-val qinv : q -> q
-
-val qlt_le_dec : q -> q -> bool
-
-val qpower_positive : q -> positive -> q
-
-val qpower : q -> z -> q
 
 type t =
 | F1 of int
@@ -231,15 +203,7 @@ val map2 : ('a1 -> 'a2 -> 'a3) -> int -> 'a1 t0 -> 'a2 t0 -> 'a3 t0
 
 val fold_left : ('a2 -> 'a1 -> 'a2) -> 'a2 -> int -> 'a1 t0 -> 'a2
 
-val z_inj_nat_rev : int -> z
-
 type cReal = { seq : (z -> q); scale : z }
-
-type cRealLt = z
-
-val cRealLt_lpo_dec : cReal -> cReal -> (__ -> (int -> bool) -> int option) -> (cRealLt, __) sum
-
-val sig_forall_dec : (int -> bool) -> int option
 
 type dReal = (q -> bool)
 
@@ -247,9 +211,11 @@ module type RbaseSymbolsSig =
  sig
   type coq_R
 
-  val coq_Rabst : cReal -> coq_R
+  val coq_Rabst : __
+                    (* cReal -> coq_R *)
 
-  val coq_Rrepr : coq_R -> cReal
+  val coq_Rrepr : __
+                    (* coq_R -> cReal *)
 
   val coq_R0 : coq_R
 
@@ -1470,6 +1436,10 @@ module Coq2_MatrixThy :
    sig
     val coq_X_eqType : Equality.coq_type
 
+    val pickle : F.coq_X -> int
+
+    val unpickle : int -> F.coq_X option
+
     val coq_X_choiceType_mixin_of : F.coq_X Countable.mixin_of
 
     val coq_X_choiceType : Choice.coq_type
@@ -1850,6 +1820,10 @@ module MatrixAll :
     module X_carrier_of_matrix :
      sig
       val coq_X_eqType : Equality.coq_type
+
+      val pickle : F.coq_X -> int
+
+      val unpickle : int -> F.coq_X option
 
       val coq_X_choiceType_mixin_of : F.coq_X Countable.mixin_of
 
@@ -2356,6 +2330,10 @@ module MatrixAllR :
      sig
       val coq_X_eqType : Equality.coq_type
 
+      val pickle : FieldR.FieldDefR.coq_X -> int
+
+      val unpickle : int -> FieldR.FieldDefR.coq_X option
+
       val coq_X_choiceType_mixin_of : FieldR.FieldDefR.coq_X Countable.mixin_of
 
       val coq_X_choiceType : Choice.coq_type
@@ -2553,21 +2531,69 @@ module MatrixR_DL :
     FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X mat2
  end
 
-module FloatMatrix_DL :
+module DL :
  sig
-  type mat = RbaseSymbolsImpl.coq_R MatrixR_DL.mat
+  type 'x mat = 'x mat2
+
+  val meq_dec : int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat -> bool
+
+  val mnth : int -> int -> FieldR.FieldDefR.coq_X mat -> int -> int -> FieldR.FieldDefR.coq_X
+
+  val mk_mat_1_1 : FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X mat
+
+  val mk_mat_3_1 :
+    FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X ->
+    FieldR.FieldDefR.coq_X mat
+
+  val mk_mat_3_3 :
+    FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X ->
+    FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X ->
+    FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X ->
+    FieldR.FieldDefR.coq_X mat
+
+  val mat0 : int -> int -> FieldR.FieldDefR.coq_X mat
+
+  val mat1 : int -> FieldR.FieldDefR.coq_X mat
+
+  val mmap :
+    int -> int -> (FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X) -> FieldR.FieldDefR.coq_X mat ->
+    FieldR.FieldDefR.coq_X mat
+
+  val mmap2 :
+    int -> int -> (FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X) ->
+    FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat
 
   val madd :
     int -> int -> FieldR.FieldDefR.coq_X mat2 -> FieldR.FieldDefR.coq_X mat2 -> FieldR.FieldDefR.coq_X
     mat2
 
+  val mopp : int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat
+
+  val msub :
+    int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X
+    mat
+
+  val mcmul :
+    int -> int -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat
+
+  val mmulc :
+    int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X -> FieldR.FieldDefR.coq_X mat
+
+  val mtrans : int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat
+
   val mmul :
-    int -> int -> int -> FieldR.FieldDefR.coq_X MatrixR_DL.mat -> FieldR.FieldDefR.coq_X
-    MatrixR_DL.mat -> FieldR.FieldDefR.coq_X MatrixR_DL.mat
+    int -> int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X mat ->
+    FieldR.FieldDefR.coq_X mat
 
-  val l2m : int -> int -> FieldR.FieldDefR.coq_X list list -> FieldR.FieldDefR.coq_X MatrixR_DL.mat
+  val l2m : int -> int -> FieldR.FieldDefR.coq_X list list -> FieldR.FieldDefR.coq_X mat
 
-  val m2l : int -> int -> mat -> (int * int) * FieldR.FieldDefR.coq_X list list
+  val m2l : int -> int -> FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X list list
+
+  val t2m_3x3 : FieldR.FieldDefR.coq_X t_3x3 -> FieldR.FieldDefR.coq_X mat
+
+  val m2t_3x3 : FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X t_3x3
+
+  val scalar_of_mat : FieldR.FieldDefR.coq_X mat -> FieldR.FieldDefR.coq_X
 
   val mget :
     FieldR.FieldDefR.coq_X -> int -> int -> FieldR.FieldDefR.coq_X mat2 -> int -> int ->
