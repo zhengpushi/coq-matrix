@@ -81,6 +81,10 @@ End FloatMatrixSig.
 (** 实数矩阵的各种实现 *)
 
 Module DL := MatrixR_DL.
+Module DP := MatrixR_DP.
+Module DR := MatrixR_DR.
+Module NF := MatrixR_NF.
+Module FF := MatrixR_FF.
 
 (* Module DL <: FloatMatrixSig. *)
 (*   Import MatrixR_DL. *)
@@ -147,11 +151,6 @@ Extract Constant total_order_T => "fun r1 r2 ->
   if c < 0 then Some true
   else (if c = 0 then None else Some false)".
 
-Extract Constant FieldR.FieldDefR.X => "float".
-Print FieldR.FieldDefR.
-(* Extract Constant FieldSig.X => "float". *)
-
-Extraction "matrix.ml" DL.
-(* DP DR NF FF. *)
+Extraction "matrix.ml" DL DP DR NF FF.
 
 
