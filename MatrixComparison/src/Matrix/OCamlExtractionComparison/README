@@ -5,6 +5,12 @@
 2. 增加了 test.ml 这些辅助程序，以便测试
 3. 主要目的是，使用10^3, 10^4, 10^5 维数的矩阵做测试，
    包括矩阵乘法等运算，观察空间和时间占用情况。
+4. 编译和测试方法
+$ bash make_manually
+$ ./matrix
+5. 测试报告和测试方法见 ocaml-extraction-comparison.pdf
+6. Coq源代码见 matrix.v
+
 
 二、编译问题
 1. 抽取的 matrix.ml 文件，编译时出错（但REPL时没有错误）
