@@ -1,4 +1,8 @@
 (*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
   purpose   : Extension for general list
   author    : ZhengPu Shi
   date      : 2021.12
@@ -7,10 +11,10 @@
   1. reference "A Gentle Introduction to Type Classes and Relations in Coq"
   
   history   :
-  1. 2021.12, by Zhengpu Shi.
+  1. 2021.12, by ZhengPu Shi.
     first version
 
-  2. 2022.05, by Zhengpu Shi.
+  2. 2022.05, by ZhengPu Shi.
     split big file into small modules
 *)
 

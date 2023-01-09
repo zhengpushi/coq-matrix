@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright 2022 ZhengPu Shi
+#  This file is part of coq-matrix. It is distributed under the MIT
+#  "expat license". You should have recieved a LICENSE file with it.
+#
 
 # 为什么需要这个脚本？为了完成OCaml程序的编译，需要解决一些问题
 # 1. 抽取的OCaml程序需要处理的问题

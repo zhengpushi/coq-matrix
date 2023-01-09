@@ -1,7 +1,15 @@
+Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
 1. Introduction
 Integration of Multiple Formal Matrix in Coq.
+The project is called : coq-matrix
 
 2. Branch for SETTA-2022
 git clone url:
 $ git clone https://github.com/zhengpushi/coq-matrix.git -b setta2022
+
+3. Authors
+ZhengPu Shi (zhengpushi@nuaa.edu.cn)
 

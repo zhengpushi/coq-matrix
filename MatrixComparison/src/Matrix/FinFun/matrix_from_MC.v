@@ -1,6 +1,9 @@
+(*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
 
-(**
-  purpose   : 学习MC中的矩阵
+  purpose   : Learn matrix implementation from MC project
   author    : ZhengPu Shi
   date      : 2022.07.16
 *)

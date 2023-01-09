@@ -1,3 +1,6 @@
+* Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it. *)
 
 0. History
 2022/8/1	First edition

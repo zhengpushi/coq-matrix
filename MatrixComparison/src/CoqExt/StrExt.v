@@ -1,8 +1,11 @@
 (*
-  purpose     : Extension for string
-  author      : Zhengpu Shi
-  date        : 2022.08
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
 
+  purpose     : Extension for string
+  author      : ZhengPu Shi
+  date        : 2022.08
 *)
 
 Require Export Nat List.

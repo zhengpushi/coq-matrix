@@ -1,4 +1,8 @@
 (*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
   purpose     : Any-dim-matrix based on list and shape constraints.
   author      : Zhengpu Shi
   date        : 2022.05

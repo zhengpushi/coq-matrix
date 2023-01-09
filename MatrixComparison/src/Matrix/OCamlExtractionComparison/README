@@ -1,6 +1,10 @@
-对Coq中矩阵模型的OCaml程序抽取测试
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
 
-一、介绍
+Issues for extraction ocaml code and test for matrix models in Coq.
+
+[1]. Introduction
 1. 从Coq的矩阵模型生成ocaml程序
 2. 增加了 test.ml 这些辅助程序，以便测试
 3. 主要目的是，使用10^3, 10^4, 10^5 维数的矩阵做测试，
@@ -12,7 +16,7 @@ $ ./matrix
 6. Coq源代码见 matrix.v
 
 
-二、编译问题
+[2]. Compile
 1. 抽取的 matrix.ml 文件，编译时出错（但REPL时没有错误）
 a. 将 ml 文件中的 R_abst, R_repr 手动修改为 __
 module type RbaseSymbolsSig =

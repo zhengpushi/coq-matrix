@@ -1,4 +1,8 @@
 (*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
   purpose   : Matrix implemented with Fin Function
   author    : ZhengPu Shi
   date      : 2021.12

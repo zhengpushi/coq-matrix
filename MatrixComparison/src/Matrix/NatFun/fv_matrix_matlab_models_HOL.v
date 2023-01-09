@@ -1,11 +1,16 @@
 (*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
   purpose   : Reproduce the results of a paper
   author    : ZhengPu Shi
   date      : 2022.06
   
   remark    :
-  1. 这是对论文 "Formal verification of Matrix based MATLAB models using 
-    interactive theorem proving" 结果的重现，同时也验证这个矩阵库的适应能力。
+  1. This is an coq re-impementation for the result of the paper 
+     "Formal verification of Matrix based MATLAB models using interactive 
+     theorem proving", meanwhile, this work could test our matrix ability.
 *)
 
 

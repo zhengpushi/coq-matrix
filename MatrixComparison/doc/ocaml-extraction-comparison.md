@@ -1,22 +1,26 @@
-# 不同矩阵模型的OCaml程序抽取及测试
+* Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it. *)
 
-## 1. 测试方法
+# Ocaml code extraction and test for these matrix models.
 
-* 测试的内容
+## 1. Test method
 
-  * 矩阵乘法的正确性，执行效率
-  * 其他内容待补充
+* Test content
 
-* 测试的步骤
+  * Correct of matrix multiplication
+  * Efficient of this operation
+  * cont.
 
-  * 随机生成 float list list 数据；
+* Test steps
 
-  * 调用 l2m 转换为内部的矩阵模型
-  * 调用 mmul 作矩阵乘法;
-  * 再调用 m2l 转换为 float list list
-  * 打印
+  * random generate data of "float list list"
+  * call "l2m" to convert the data to inner matrix model
+  * call "mmul" in corresponded model to perform matrix multiplication
+  * call "m2l" to convert the matrix model to "float list list"
+  * print to screen
 
-* 测试程序用法
+* The usage of the test program
 
   ```
   $ ./matrix --help
@@ -29,40 +33,39 @@
     --help  Display this list of options
   ```
   
-  这里提供了几个可选参数，
+  We provided several optional parameters
   
-  * mm 指定矩阵模型，可使用 DL/DP/DR/NF/FF 这五种模型
-  * size 指定矩阵维度，为简单起见，作矩阵乘法的两个矩阵的三个维度都用同一个值。即：$A(r\times c) \times B(c\times s) = C (r\times s)$，其中的 r = c = s = size。
-  * print 是否打印矩阵，只会打印少量的头部信息，不会全部打印。
-  * benchmark 是否执行基准测试，自动选择模型，自动增加矩阵规模，从而无限循环的测试性能。
+  * mm          specify the matrix model, which could be one value from {DL,DP,DR,NF,FF}
+  * size        specify the matrix dimension. For simplicity, three dimensions of two matrices have same value.
+	That means: $A(r\times c) \times B(c\times s) = C (r\times s)$，r = c = s = size。
+  * print       is print the matrix? Note that, we only print head informations, not all of them
+  * benchmark   is perform the test benchmark? If true, the program will automatic choose the model, and auto increase the matrix size, to do a infinite test.
 
 
-## 2. 测试结果
+## 2. Test result
 
-* 版本 ( Nov 04, 2022)
+* Version ( Nov 04, 2022)
 
-  * 结论：所有矩阵模型均能够进行代码抽取和矩阵运算，但效率差异较大
+  * Conclusion：All matrix models could be extracted ocaml code, but the efficient have big difference.
 
-  * 正确性：NF模型是错误的，其余四个正确
+  * Correctness：NF model is wrong (not implemented yet), other four models are correct.
 
-    * 使用相同的输入（固定了随机数的种子，生成的输入矩阵相同），前四个模型下，矩阵乘法结果相同。
-    * NF模型，由于 choiceType 的构造尚未实现，因此尚未取出内容，所以结果错误。
+    * We use same input (same data of the input matrix), we get the correct result for multiplication operation of top four models.
+    * But the NF model have no result. Because the "choiceType" has a dummy implementation (I havn't understand the Mathmatical-Component project yet)
 
-  * 效率差异比较
+  * Efficient differences:
 
-    以不同的矩阵维度做乘法，统计执行时间（单位：秒）。
+    We get the running time (unit: second) of matrix multiplication operation with different matrix dimension.
 
-    FF模型结果错误，而且太慢，不参与比较。简要的结果是：
+    The result of FF model is wrong, and very slow too. So we dont' use it now.
+	Some result of FF model is (with the dummy result)
 
     size=10, 0.14s
-
     size=20, 3.50s
-
     size =25, 12s
-
     size=30, 40s
 
-    其余四种模型的比较
+    Comparison of other models
 
     | size\model | DL    | DP   | DR   | NF     | FF   |
     | ---------- | ----- | ---- | ---- | ------ | ---- |
@@ -78,9 +81,7 @@
     | 211        | 72.90 | 1.48 | 0.55 | 111.90 |      |
     | 253        |       |      |      |        |      |
 
-    结果分析
+    Analysis of the result:
 
-    * 由于这个测试方案是以list为中间结果，因此与实现模型相关。
-    * 所有函数未经过优化，包括尾递归分析等都没有做。
-
-  * 
+    * Because this test method use list type as the immediate result, and depends on lots of auxiliary functions. So the result has a lot of room for improvement.
+    * All the functions havn't optimized yet. For example, we havn't carefully design tail-recursion yet.

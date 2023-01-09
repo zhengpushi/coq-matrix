@@ -1,4 +1,8 @@
 (*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
   purpose   : Extraction of [R] into Ocaml's [float]
   author    : ZhengPu Shi
   date      : Nov 3, 2022

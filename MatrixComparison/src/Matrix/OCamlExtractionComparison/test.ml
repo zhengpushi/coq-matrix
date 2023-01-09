@@ -1,4 +1,8 @@
 (*
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
   purpose   : Test matrix ocaml program which extracted from Coq
   author    : ZhengPu Shi
   date      : Nov 1, 2022

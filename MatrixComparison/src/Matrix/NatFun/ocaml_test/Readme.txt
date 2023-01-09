@@ -1,3 +1,7 @@
+ Copyright 2022 ZhengPu Shi
+  This file is part of coq-matrix. It is distributed under the MIT
+  "expat license". You should have recieved a LICENSE file with it.
+
 编译注意事项
 1. 由于Coq生成OCaml代码时，Extraction指定了如下操作
 Extract Constant Rabst => "__".
