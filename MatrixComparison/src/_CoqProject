@@ -9,6 +9,9 @@
 -arg -w -arg -notation-overridden
 -arg -w -arg -ambiguous-paths
 -arg -w -arg -local-declaration
+-arg -w -arg -extraction-reserved-identifier
+-arg -w -arg -extraction-opaque-accessed
+-arg -w -arg -extraction-logical-axiom
 # -arg -w -arg -deprecated-hint-without-locality
 # -arg -w -arg -redundant-canonical-projection
 

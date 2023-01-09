@@ -55,7 +55,7 @@ Qed.
 Require Export Arith Lia Lra.
 Require Import Setoid. (* R ==> R', Morphisms.respectful R R' *)
   Lemma pow_two_succ_l : forall x, 2^x * 2 = 2 ^ (x + 1).
-  Proof. intros. rewrite mult_comm. rewrite <- Nat.pow_succ_r'. intuition. Qed.
+  Proof. intros. rewrite Nat.mul_comm. rewrite <- Nat.pow_succ_r'. intuition. Qed.
   
   Lemma pow_two_succ_r : forall x, 2 * 2^x = 2 ^ (x + 1).
   Proof. intros. rewrite <- Nat.pow_succ_r'. intuition. Qed.
@@ -71,15 +71,15 @@ Require Import Setoid. (* R ==> R', Morphisms.respectful R R' *)
     (* NB: this first thing is potentially a bad idea, do not do with 2^1 *)
     | [ |- context[ 4%nat ]]                  => replace 4%nat with (2^2)%nat 
                                                  by reflexivity
-    | [ |- context[ (0 + ?a)%nat]]            => rewrite plus_0_l 
-    | [ |- context[ (?a + 0)%nat]]            => rewrite plus_0_r 
+    | [ |- context[ (0 + ?a)%nat]]            => rewrite Nat.add_0_l 
+    | [ |- context[ (?a + 0)%nat]]            => rewrite Nat.add_0_r 
     | [ |- context[ (1 * ?a)%nat]]            => rewrite Nat.mul_1_l 
     | [ |- context[ (?a * 1)%nat]]            => rewrite Nat.mul_1_r 
     | [ |- context[ (2 * 2^?x)%nat]]          => rewrite <- Nat.pow_succ_r'
     | [ |- context[ (2^?x * 2)%nat]]          => rewrite pow_two_succ_l
     | [ |- context[ (2^?x + 2^?x)%nat]]       => rewrite double_pow 
     | [ |- context[ (2^?x * 2^?y)%nat]]       => rewrite <- Nat.pow_add_r 
-    | [ |- context[ (?a + (?b + ?c))%nat ]]   => rewrite plus_assoc 
+    | [ |- context[ (?a + (?b + ?c))%nat ]]   => rewrite Nat.add_assoc 
     | [ |- (2^?x = 2^?y)%nat ]                => apply pow_components; try lia 
     end.
 

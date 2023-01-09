@@ -7,3 +7,5 @@
 **/*.glob
 **/*.aux
 **/.lia.cache
+**/*.ml
+**/*.mli

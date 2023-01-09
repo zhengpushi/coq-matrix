@@ -24,12 +24,14 @@ Require Import String.
 (** * AST for R *)
 
 (** 实数运算化简自动化 *)
-Hint Rewrite Rplus_0_l : real.  (* 0 + r = r *)
-Hint Rewrite Rplus_0_r : real.  (* r + 0 = r *)
-Hint Rewrite Rmult_0_l : real.  (* 0 * r = 0 *)
-Hint Rewrite Rmult_0_r : real.  (* r * 0 = 0 *)
-Hint Rewrite Rmult_1_l : real.  (* 1 * r = r *)
-Hint Rewrite Rmult_1_r : real.  (* r * 1 = r *)
+Global Hint Rewrite
+  Rplus_0_l  (* 0 + r = r *)
+  Rplus_0_r  (* r + 0 = r *)
+  Rmult_0_l  (* 0 * r = 0 *)
+  Rmult_0_r  (* r * 0 = 0 *)
+  Rmult_1_l  (* 1 * r = r *)
+  Rmult_1_r  (* r * 1 = r *)
+  : real.
 
 (** 新的作用域 *)
 Declare Scope T_scope.

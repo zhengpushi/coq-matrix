@@ -784,7 +784,8 @@ Section GenerateSpecialList.
     nth i (list_unit n i) A0 = A1.
   Proof.
     induction n; try easy. destruct i; simpl; auto.
-    intros; apply IHn. apply Lt.lt_S_n; auto.
+    intros; apply IHn.
+    apply Nat.succ_lt_mono; auto.
   Qed.
   
   (** list_unit(n,i) [j] = A0, when i < n /\ j <> i *)

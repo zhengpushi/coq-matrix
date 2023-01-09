@@ -182,7 +182,7 @@ Global Hint Unfold
   Rsqr          (* r² = r * r *)
   : R.
 
-Hint Rewrite
+Global Hint Rewrite
   pow1                (* 1 ^ n = 1 *)
   pow_O               (* x ^ 0 = 1 *)
   pow_1               (* x ^ 1 = x *)
@@ -264,7 +264,7 @@ Proof. auto. Qed.
   autorewrite with xx_Rsqr; auto with R.    (* for auto *)
 >>
 *)
-Hint Rewrite xx_Rsqr : R.
+Global Hint Rewrite xx_Rsqr : R.
 
 
 (* --------------------------------------------------------------------- *)
@@ -273,16 +273,16 @@ Hint Rewrite xx_Rsqr : R.
 (** We always prefer 1 *)
 Lemma R1_eq_1 : R1 = 1.
 Proof. auto. Qed.
-Hint Rewrite R1_eq_1 : R.
+Global Hint Rewrite R1_eq_1 : R.
 
 Lemma Rsqr_1 : 1² = 1.
 Proof. unfold Rsqr; ring. Qed.
-Hint Rewrite Rsqr_1 : R.
+Global Hint Rewrite Rsqr_1 : R.
 Global Hint Resolve Rsqr_1 : R.
 
 Lemma Rinv_1 : /1 = 1.
 Proof. auto with real. Qed.
-Hint Rewrite Rinv_1 : R.
+Global Hint Rewrite Rinv_1 : R.
 Global Hint Resolve Rinv_1 : R.
 
 Lemma zero_le_1 : 0 <= 1.
@@ -311,13 +311,13 @@ End TEST_R1_and_1.
 
 Lemma Rsub_opp r1 r2 : r1 - (- r2) = r1 + r2.
 Proof. ring. Qed.
-Hint Rewrite Rsub_opp : R.
+Global Hint Rewrite Rsub_opp : R.
 
 
 (** ** Rsqrt *)
 Lemma sqrt_1 : sqrt 1 = 1.
 Proof. apply Rsqr_inj; autorewrite with R; auto with R. Qed.
-Hint Rewrite sqrt_1 : R.
+Global Hint Rewrite sqrt_1 : R.
 
 Lemma sqrt_le0_eq_0 r (H : r <= 0) : sqrt r = 0.
 Proof.
@@ -370,7 +370,7 @@ Proof.
   autorewrite with R; auto with R.
 Qed.
 Global Hint Resolve Rsqr_sqrt_sqrt : R.
-Hint Rewrite Rsqr_sqrt_sqrt : R.
+Global Hint Rewrite Rsqr_sqrt_sqrt : R.
 
 (** ( √ r1 * √ r2)^2 = r1 * r2 *)
 Lemma sqrt_mult_sqrt : forall (r1 r2 : R), 
@@ -380,7 +380,7 @@ Proof.
   intros. ring_simplify. repeat rewrite pow2_sqrt; auto.
 Qed.
 Global Hint Resolve sqrt_mult_sqrt : R.
-Hint Rewrite sqrt_mult_sqrt : R.
+Global Hint Rewrite sqrt_mult_sqrt : R.
 
 
 Module TEST_Rsqrt.
@@ -394,7 +394,7 @@ End TEST_Rsqrt.
 Lemma cos2_sin2 x : (cos x)² + (sin x)² = 1.
 Proof. rewrite Rplus_comm; auto with R. Qed.
 Global Hint Resolve cos2_sin2 : R.
-Hint Rewrite cos2_sin2 : R.
+Global Hint Rewrite cos2_sin2 : R.
 
 Module TEST_sin_cos_tan.
   Goal forall x, cos x * cos x + sin x * sin x = R1.

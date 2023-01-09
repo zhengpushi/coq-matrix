@@ -646,7 +646,10 @@ Section msplit.
   Definition cvtMatShape r1 r2 {c} (m1 : @mat T (r1 + r2 - r1) c) 
     : @mat T r2 c.
   Proof.
-    rewrite minus_plus in m1. exact m1. 
+    (* rewrite minus_plus in m1. *)
+    rewrite Nat.add_comm in m1.
+    rewrite Nat.add_sub in m1.
+    exact m1.
   Defined.
 
   Definition msplitr' r1 r2 {c} def (m: @mat T (r1+r2) c) 

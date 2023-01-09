@@ -405,7 +405,11 @@ Module MatrixThy (F : FieldSig) <: MatrixThySig F.
   
   (* ==================================== *)
   (** ** Matrix Automation *)
-  
+
+  (** a deprecated lemma, which I need it still. *)
+  Lemma lt_S_n : forall n m : nat, S n < S m -> n < m.
+  Proof. intros. apply Nat.succ_lt_mono. auto. Qed.
+
   (** Useful tactic for solving X = B for concrete X, B *)
 
   Ltac solve_end :=
